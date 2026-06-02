@@ -1,0 +1,169 @@
+/**
+ * Slash command and component handlers for `/devin-template`.
+ *
+ * Presents a select menu of pre-built task templates, then shows
+ * a modal form for the selected template. On submission, builds
+ * a structured prompt and creates a Devin session.
+ */
+
+import {
+	ActionRowBuilder,
+	type ChatInputCommandInteraction,
+	EmbedBuilder,
+	ModalBuilder,
+	type ModalSubmitInteraction,
+	SlashCommandBuilder,
+	StringSelectMenuBuilder,
+	type StringSelectMenuInteraction,
+	TextInputBuilder,
+	TextInputStyle,
+} from "discord.js";
+import {
+	EMBED_COLORS,
+	EMBED_FOOTER_TEXT,
+	THREAD_AUTO_ARCHIVE_DURATION,
+	THREAD_NAME_MAX_LENGTH,
+} from "../config.js";
+import { createSession } from "../services/devin-api.js";
+import { createLogger } from "../services/logger.js";
+import type { SessionManager } from "../services/session-manager.js";
+import { TEMPLATES, getTemplate } from "../templates/index.js";
+import type { BotConfig, ThreadableChannel } from "../types/index.js";
+
+const log = createLogger("Command:DevinTemplate");
+
+/** Slash command definition for `/devin-template` */
+export const devinTemplateCommand = new SlashCommandBuilder()
+	.setName("devin-template")
+	.setDescription("Start a Devin session from a template");
+
+/**
+ * Displays the template selection dropdown menu.
+ *
+ * @param interaction - Discord slash command interaction
+ */
+export async function handleDevinTemplate(interaction: ChatInputCommandInteraction): Promise<void> {
+	const options = TEMPLATES.map((t) => ({
+		label: t.name,
+		description: t.description,
+		value: t.id,
+	}));
+
+	const select = new StringSelectMenuBuilder()
+		.setCustomId("template-select")
+		.setPlaceholder("Choose a template")
+		.addOptions(options);
+
+	const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(select);
+	await interaction.reply({
+		content: "Select a template:",
+		components: [row],
+		ephemeral: true,
+	});
+}
+
+/**
+ * Handles template selection from the dropdown menu.
+ * Opens a modal form with the template's configured fields.
+ *
+ * @param interaction - Discord select menu interaction
+ */
+export async function handleTemplateSelect(
+	interaction: StringSelectMenuInteraction,
+): Promise<void> {
+	const templateId = interaction.values[0];
+	const template = getTemplate(templateId);
+
+	if (!template) {
+		await interaction.reply({
+			content: "Template not found.",
+			ephemeral: true,
+		});
+		return;
+	}
+
+	const modal = new ModalBuilder()
+		.setCustomId(`template-modal:${templateId}`)
+		.setTitle(template.name);
+
+	for (const field of template.fields) {
+		const input = new TextInputBuilder()
+			.setCustomId(field.id)
+			.setLabel(field.label)
+			.setPlaceholder(field.placeholder)
+			.setRequired(field.required)
+			.setStyle(field.style === "paragraph" ? TextInputStyle.Paragraph : TextInputStyle.Short);
+
+		modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(input));
+	}
+
+	await interaction.showModal(modal);
+}
+
+/**
+ * Handles modal form submission for a template. Extracts field values,
+ * builds the prompt, creates a Devin session, and opens a thread.
+ *
+ * @param interaction - Discord modal submit interaction
+ * @param config - Validated bot configuration
+ * @param sessionManager - Session tracking manager instance
+ */
+export async function handleTemplateSubmit(
+	interaction: ModalSubmitInteraction,
+	config: BotConfig,
+	sessionManager: SessionManager,
+): Promise<void> {
+	const templateId = interaction.customId.replace("template-modal:", "");
+	const template = getTemplate(templateId);
+
+	if (!template) {
+		await interaction.reply({
+			content: "Template not found.",
+			ephemeral: true,
+		});
+		return;
+	}
+
+	const channel = interaction.channel as ThreadableChannel | null;
+	if (!channel?.threads) {
+		await interaction.reply({
+			content: "This command can only be used in a text channel.",
+			ephemeral: true,
+		});
+		return;
+	}
+
+	await interaction.deferReply();
+
+	const values: Record<string, string> = {};
+	for (const field of template.fields) {
+		values[field.id] = interaction.fields.getTextInputValue(field.id);
+	}
+
+	const prompt = template.buildPrompt(values);
+	const { session_id, url } = await createSession(config.devinApiKey, prompt);
+	log.info(`Template session created: ${session_id}`);
+
+	const threadName = `Devin: ${template.name}`.slice(0, THREAD_NAME_MAX_LENGTH);
+	const thread = await channel.threads.create({
+		name: threadName,
+		autoArchiveDuration: THREAD_AUTO_ARCHIVE_DURATION,
+		reason: `Devin session ${session_id}`,
+	});
+
+	const embed = new EmbedBuilder()
+		.setTitle(`Devin Session: ${template.name}`)
+		.setDescription(prompt)
+		.setColor(EMBED_COLORS.working)
+		.addFields(
+			{ name: "Status", value: "Working", inline: true },
+			{ name: "Session ID", value: `\`${session_id}\``, inline: true },
+			{ name: "View Session", value: `[Open in Devin](${url})` },
+		)
+		.setTimestamp()
+		.setFooter({ text: EMBED_FOOTER_TEXT });
+
+	await sessionManager.track(session_id, thread, url, interaction.user.id);
+	await thread.send({ embeds: [embed] });
+	await interaction.editReply(`Session started! Follow progress in ${thread}`);
+}
