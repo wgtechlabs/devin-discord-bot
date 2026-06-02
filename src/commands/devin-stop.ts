@@ -38,6 +38,15 @@ export async function handleDevinStop(
 		return;
 	}
 
+	const tracked = sessionManager.getTracked(sessionId);
+	if (tracked && tracked.userId !== interaction.user.id) {
+		await interaction.reply({
+			content: "You can only stop sessions that you started.",
+			ephemeral: true,
+		});
+		return;
+	}
+
 	await interaction.deferReply({ ephemeral: true });
 
 	try {

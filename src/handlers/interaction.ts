@@ -42,7 +42,7 @@ export function createInteractionHandler(config: BotConfig, sessionManager: Sess
 			log.error("Interaction error:", err);
 
 			const reply = {
-				content: `Something went wrong: ${err instanceof Error ? err.message : "Unknown error"}`,
+				content: "Something went wrong. Please try again later.",
 				ephemeral: true,
 			};
 
