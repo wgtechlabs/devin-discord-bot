@@ -26,6 +26,8 @@ export interface BotConfig {
 	devinApiKey: string;
 	/** Current log level threshold */
 	logLevel: LogLevel;
+	/** Customizable bot display name used in embeds and thread names */
+	botName: string;
 }
 
 /**

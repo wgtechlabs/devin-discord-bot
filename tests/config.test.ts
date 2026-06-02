@@ -16,6 +16,7 @@ import {
 	POLL_INTERVAL_NORMAL,
 	THREAD_AUTO_ARCHIVE_DURATION,
 	THREAD_NAME_MAX_LENGTH,
+	getEmbedFooterText,
 } from "../src/config.js";
 
 describe("loadConfig", () => {
@@ -26,6 +27,26 @@ describe("loadConfig", () => {
 		expect(config.discordClientId).toBe("test-client-id");
 		expect(config.devinApiKey).toBe("apk_test-key");
 		expect(config.logLevel).toBe("error");
+	});
+
+	test("defaults bot name to Devin when BOT_NAME is not set", () => {
+		const original = process.env.BOT_NAME;
+		process.env.BOT_NAME = undefined;
+
+		const config = loadConfig();
+		expect(config.botName).toBe("Devin");
+
+		process.env.BOT_NAME = original;
+	});
+
+	test("uses custom bot name from BOT_NAME env variable", () => {
+		const original = process.env.BOT_NAME;
+		process.env.BOT_NAME = "MyBot";
+
+		const config = loadConfig();
+		expect(config.botName).toBe("MyBot");
+
+		process.env.BOT_NAME = original;
 	});
 
 	test("defaults log level to info for invalid values", () => {
@@ -48,8 +69,13 @@ describe("config constants", () => {
 		expect(EMBED_COLORS.info).toBeGreaterThan(0);
 	});
 
-	test("footer text is defined", () => {
+	test("footer text constant is defined", () => {
 		expect(EMBED_FOOTER_TEXT).toBe("Devin Discord Bot");
+	});
+
+	test("getEmbedFooterText returns correct text for given bot name", () => {
+		expect(getEmbedFooterText("Devin")).toBe("Devin Discord Bot");
+		expect(getEmbedFooterText("MyBot")).toBe("MyBot Discord Bot");
 	});
 
 	test("polling intervals are reasonable", () => {

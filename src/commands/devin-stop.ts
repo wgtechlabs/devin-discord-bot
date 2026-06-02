@@ -1,5 +1,5 @@
 /**
- * Slash command handler for `/devin-stop`.
+ * Slash command handler for `/devin stop`.
  *
  * Terminates an active Devin session via the API and updates
  * the session tracking state. The target session is auto-detected
@@ -7,7 +7,6 @@
  */
 
 import type { ChatInputCommandInteraction } from "discord.js";
-import { SlashCommandBuilder } from "discord.js";
 import { terminateSession } from "../services/devin-api.js";
 import { createLogger } from "../services/logger.js";
 import type { SessionManager } from "../services/session-manager.js";
@@ -15,19 +14,8 @@ import type { BotConfig } from "../types/index.js";
 
 const log = createLogger("Command:DevinStop");
 
-/** Slash command definition for `/devin-stop` */
-export const devinStopCommand = new SlashCommandBuilder()
-	.setName("devin-stop")
-	.setDescription("Terminate a Devin session")
-	.addStringOption((opt) =>
-		opt
-			.setName("session_id")
-			.setDescription("Session ID (auto-detected if used in a session thread)")
-			.setRequired(false),
-	);
-
 /**
- * Processes a `/devin-stop` interaction: resolves the target session,
+ * Processes a `/devin stop` interaction: resolves the target session,
  * terminates it via the API, and updates tracking state.
  *
  * @param interaction - Discord slash command interaction

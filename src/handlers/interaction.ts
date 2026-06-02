@@ -24,8 +24,9 @@ const log = createLogger("InteractionHandler");
 export function createInteractionHandler(config: BotConfig, sessionManager: SessionManager) {
 	return async (interaction: Interaction): Promise<void> => {
 		try {
-			if (interaction.isChatInputCommand()) {
-				const handler = commandHandlers[interaction.commandName];
+			if (interaction.isChatInputCommand() && interaction.commandName === "devin") {
+				const subcommand = interaction.options.getSubcommand(false);
+				const handler = subcommand ? commandHandlers[subcommand] : undefined;
 				if (handler) {
 					await handler(interaction, config, sessionManager);
 				}

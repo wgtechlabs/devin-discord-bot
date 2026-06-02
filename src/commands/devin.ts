@@ -1,17 +1,17 @@
 /**
- * Slash command handler for `/devin`.
+ * Slash command handler for `/devin start`.
  *
  * Creates a new Devin session from a freeform task description,
  * opens a Discord thread for the conversation, and begins polling.
  * Supports optional file attachments forwarded to the Devin API.
  */
 
-import { type ChatInputCommandInteraction, EmbedBuilder, SlashCommandBuilder } from "discord.js";
+import { type ChatInputCommandInteraction, EmbedBuilder } from "discord.js";
 import {
 	EMBED_COLORS,
-	EMBED_FOOTER_TEXT,
 	THREAD_AUTO_ARCHIVE_DURATION,
 	THREAD_NAME_MAX_LENGTH,
+	getEmbedFooterText,
 } from "../config.js";
 import { createSession, uploadAttachment } from "../services/devin-api.js";
 import { createLogger } from "../services/logger.js";
@@ -20,19 +20,8 @@ import type { BotConfig, ThreadableChannel } from "../types/index.js";
 
 const log = createLogger("Command:Devin");
 
-/** Slash command definition for `/devin` */
-export const devinCommand = new SlashCommandBuilder()
-	.setName("devin")
-	.setDescription("Start a new Devin coding session")
-	.addStringOption((opt) =>
-		opt.setName("task").setDescription("What should Devin work on?").setRequired(true),
-	)
-	.addAttachmentOption((opt) =>
-		opt.setName("attachment").setDescription("File for Devin to work with").setRequired(false),
-	);
-
 /**
- * Processes a `/devin` interaction: validates the channel, creates
+ * Processes a `/devin start` interaction: validates the channel, creates
  * a Devin session, opens a thread, and starts tracking.
  *
  * @param interaction - Discord slash command interaction
@@ -74,7 +63,7 @@ export async function handleDevin(
 	const { session_id, url } = await createSession(config.devinApiKey, prompt);
 	log.info(`Session created: ${session_id}`);
 
-	const threadName = `Devin: ${task.slice(0, THREAD_NAME_MAX_LENGTH - 7)}`;
+	const threadName = `${config.botName}: ${task.slice(0, THREAD_NAME_MAX_LENGTH - config.botName.length - 2)}`;
 	const thread = await channel.threads.create({
 		name: threadName,
 		autoArchiveDuration: THREAD_AUTO_ARCHIVE_DURATION,
@@ -82,7 +71,7 @@ export async function handleDevin(
 	});
 
 	const embed = new EmbedBuilder()
-		.setTitle("Devin Session Started")
+		.setTitle(`${config.botName} Session Started`)
 		.setDescription(task)
 		.setColor(EMBED_COLORS.working)
 		.addFields(
@@ -91,7 +80,7 @@ export async function handleDevin(
 			{ name: "View Session", value: `[Open in Devin](${url})` },
 		)
 		.setTimestamp()
-		.setFooter({ text: EMBED_FOOTER_TEXT });
+		.setFooter({ text: getEmbedFooterText(config.botName) });
 
 	await sessionManager.track(session_id, thread, url, interaction.user.id);
 	await thread.send({ embeds: [embed] });

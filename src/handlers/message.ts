@@ -192,7 +192,7 @@ async function handleMention(
 	const { session_id, url } = await createSession(config.devinApiKey, prompt);
 	log.info(`Session created via @mention: ${session_id}`);
 
-	const threadName = `Devin: ${(task || "New session").slice(0, THREAD_NAME_MAX_LENGTH - 7)}`;
+	const threadName = `${config.botName}: ${(task || "New session").slice(0, THREAD_NAME_MAX_LENGTH - config.botName.length - 2)}`;
 	const thread = await channel.threads.create({
 		name: threadName,
 		autoArchiveDuration: THREAD_AUTO_ARCHIVE_DURATION,

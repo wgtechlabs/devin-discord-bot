@@ -9,10 +9,10 @@
 import { type Client, EmbedBuilder, type ThreadChannel } from "discord.js";
 import {
 	EMBED_COLORS,
-	EMBED_FOOTER_TEXT,
 	POLL_FAST_PERIOD,
 	POLL_INTERVAL_INITIAL,
 	POLL_INTERVAL_NORMAL,
+	getEmbedFooterText,
 } from "../config.js";
 import type {
 	BotConfig,
@@ -179,7 +179,7 @@ export class SessionManager {
 			.setDescription("This Devin session was manually terminated.")
 			.setColor(EMBED_COLORS.error)
 			.setTimestamp()
-			.setFooter({ text: EMBED_FOOTER_TEXT });
+			.setFooter({ text: getEmbedFooterText(this.config?.botName ?? "Devin") });
 
 		await session.thread.send({ embeds: [embed] }).catch((err: Error) => {
 			log.error("Failed to send stop embed:", err.message);
@@ -276,7 +276,7 @@ export class SessionManager {
 			.setDescription(truncated)
 			.setColor(EMBED_COLORS.working)
 			.setTimestamp()
-			.setFooter({ text: EMBED_FOOTER_TEXT });
+			.setFooter({ text: getEmbedFooterText(this.config?.botName ?? "Devin") });
 
 		await session.thread.send({ embeds: [embed] }).catch((err: Error) => {
 			log.error("Failed to post Devin message:", err.message);
@@ -293,7 +293,7 @@ export class SessionManager {
 			.addFields({ name: "Repository", value: pr.repository, inline: true })
 			.setColor(EMBED_COLORS.finished)
 			.setTimestamp()
-			.setFooter({ text: EMBED_FOOTER_TEXT });
+			.setFooter({ text: getEmbedFooterText(this.config?.botName ?? "Devin") });
 
 		await session.thread.send({ embeds: [embed] }).catch((err: Error) => {
 			log.error("Failed to post PR embed:", err.message);
@@ -313,7 +313,7 @@ export class SessionManager {
 			.setDescription(`[View in Devin](${session.url})`)
 			.setColor(STATUS_COLORS[status])
 			.setTimestamp()
-			.setFooter({ text: EMBED_FOOTER_TEXT });
+			.setFooter({ text: getEmbedFooterText(this.config?.botName ?? "Devin") });
 
 		await session.thread.send({ embeds: [embed] }).catch((err: Error) => {
 			log.error("Failed to post status embed:", err.message);
