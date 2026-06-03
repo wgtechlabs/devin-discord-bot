@@ -3,7 +3,7 @@
 
 [![Devin Discord Bot – GitHub Repo Banner](https://ghrb.waren.build/banner?header=Devin+Discord+Bot+%F0%9F%A4%96&subheader=Self-hosted+Discord+bot+integration+for+Devin+AI&bg=4752C4-5865F2&color=FFFFFF)](https://github.com/wgtechlabs/devin-discord-bot)
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue.svg)](https://www.typescriptlang.org/)
 [![discord.js](https://img.shields.io/badge/discord.js-v14-5865F2.svg)](https://discord.js.org/)
 [![Bun](https://img.shields.io/badge/Bun-Runtime-f472b6.svg)](https://bun.sh/)
@@ -207,4 +207,4 @@ This project follows [Clean Flow](https://github.com/wgtechlabs/clean-flow), [Cl
 
 ## License
 
-MIT — [WG Tech Labs](https://github.com/wgtechlabs)
+GPL-3.0 — [WG Tech Labs](https://github.com/wgtechlabs)
