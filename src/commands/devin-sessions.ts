@@ -1,29 +1,27 @@
 /**
- * Slash command handler for `/devin-sessions`.
+ * Slash command handler for `/devin sessions`.
  *
  * Lists all currently tracked Devin sessions with their status,
  * thread link, and session age. Displays results as a rich embed.
  */
 
 import type { ChatInputCommandInteraction } from "discord.js";
-import { EmbedBuilder, SlashCommandBuilder } from "discord.js";
-import { EMBED_COLORS, EMBED_FOOTER_TEXT } from "../config.js";
+import { EmbedBuilder } from "discord.js";
+import { EMBED_COLORS, getEmbedFooterText } from "../config.js";
 import type { SessionManager } from "../services/session-manager.js";
-
-/** Slash command definition for `/devin-sessions` */
-export const devinSessionsCommand = new SlashCommandBuilder()
-	.setName("devin-sessions")
-	.setDescription("List active Devin sessions");
+import type { BotConfig } from "../types/index.js";
 
 /**
- * Processes a `/devin-sessions` interaction: retrieves all tracked
+ * Processes a `/devin sessions` interaction: retrieves all tracked
  * sessions and displays them in a formatted embed.
  *
  * @param interaction - Discord slash command interaction
+ * @param config - Validated bot configuration
  * @param sessionManager - Session tracking manager instance
  */
 export async function handleDevinSessions(
 	interaction: ChatInputCommandInteraction,
+	config: BotConfig,
 	sessionManager: SessionManager,
 ): Promise<void> {
 	const sessions = sessionManager.getAllSessions();
@@ -42,11 +40,11 @@ export async function handleDevinSessions(
 	});
 
 	const embed = new EmbedBuilder()
-		.setTitle("Active Devin Sessions")
+		.setTitle("Active Sessions")
 		.setDescription(lines.join("\n"))
 		.setColor(EMBED_COLORS.info)
 		.setTimestamp()
-		.setFooter({ text: EMBED_FOOTER_TEXT });
+		.setFooter({ text: getEmbedFooterText(config.botName) });
 
 	await interaction.reply({ embeds: [embed], ephemeral: true });
 }

@@ -24,8 +24,9 @@ const log = createLogger("InteractionHandler");
 export function createInteractionHandler(config: BotConfig, sessionManager: SessionManager) {
 	return async (interaction: Interaction): Promise<void> => {
 		try {
-			if (interaction.isChatInputCommand()) {
-				const handler = commandHandlers[interaction.commandName];
+			if (interaction.isChatInputCommand() && interaction.commandName === "devin") {
+				const subcommand = interaction.options.getSubcommand(false);
+				const handler = subcommand ? commandHandlers[subcommand] : undefined;
 				if (handler) {
 					await handler(interaction, config, sessionManager);
 				}
@@ -41,7 +42,7 @@ export function createInteractionHandler(config: BotConfig, sessionManager: Sess
 			log.error("Interaction error:", err);
 
 			const reply = {
-				content: `Something went wrong: ${err instanceof Error ? err.message : "Unknown error"}`,
+				content: "Something went wrong. Please try again later.",
 				ephemeral: true,
 			};
 

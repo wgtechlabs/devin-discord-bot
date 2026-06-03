@@ -8,6 +8,7 @@
 import { describe, expect, test } from "bun:test";
 import { loadConfig } from "../src/config.js";
 import {
+	BOT_NAME_MAX_LENGTH,
 	DEVIN_API_BASE_URL,
 	EMBED_COLORS,
 	EMBED_FOOTER_TEXT,
@@ -16,6 +17,7 @@ import {
 	POLL_INTERVAL_NORMAL,
 	THREAD_AUTO_ARCHIVE_DURATION,
 	THREAD_NAME_MAX_LENGTH,
+	getEmbedFooterText,
 } from "../src/config.js";
 
 describe("loadConfig", () => {
@@ -26,6 +28,67 @@ describe("loadConfig", () => {
 		expect(config.discordClientId).toBe("test-client-id");
 		expect(config.devinApiKey).toBe("apk_test-key");
 		expect(config.logLevel).toBe("error");
+	});
+
+	test("defaults bot name to Devin when BOT_NAME is not set", () => {
+		const original = process.env.BOT_NAME;
+		// biome-ignore lint/performance/noDelete: Test requires unsetting env var.
+		delete process.env.BOT_NAME;
+
+		const config = loadConfig();
+		expect(config.botName).toBe("Devin");
+
+		if (original === undefined) {
+			// biome-ignore lint/performance/noDelete: Restore env var to unset state.
+			delete process.env.BOT_NAME;
+		} else {
+			process.env.BOT_NAME = original;
+		}
+	});
+
+	test("uses custom bot name from BOT_NAME env variable", () => {
+		const original = process.env.BOT_NAME;
+		process.env.BOT_NAME = "MyBot";
+
+		const config = loadConfig();
+		expect(config.botName).toBe("MyBot");
+
+		if (original === undefined) {
+			// biome-ignore lint/performance/noDelete: Restore env var to unset state.
+			delete process.env.BOT_NAME;
+		} else {
+			process.env.BOT_NAME = original;
+		}
+	});
+
+	test("truncates bot name exceeding max length", () => {
+		const original = process.env.BOT_NAME;
+		process.env.BOT_NAME = "A".repeat(BOT_NAME_MAX_LENGTH + 20);
+
+		const config = loadConfig();
+		expect(config.botName.length).toBe(BOT_NAME_MAX_LENGTH);
+
+		if (original === undefined) {
+			// biome-ignore lint/performance/noDelete: Restore env var to unset state.
+			delete process.env.BOT_NAME;
+		} else {
+			process.env.BOT_NAME = original;
+		}
+	});
+
+	test("falls back to Devin for whitespace-only bot name", () => {
+		const original = process.env.BOT_NAME;
+		process.env.BOT_NAME = "   ";
+
+		const config = loadConfig();
+		expect(config.botName).toBe("Devin");
+
+		if (original === undefined) {
+			// biome-ignore lint/performance/noDelete: Restore env var to unset state.
+			delete process.env.BOT_NAME;
+		} else {
+			process.env.BOT_NAME = original;
+		}
 	});
 
 	test("defaults log level to info for invalid values", () => {
@@ -48,8 +111,13 @@ describe("config constants", () => {
 		expect(EMBED_COLORS.info).toBeGreaterThan(0);
 	});
 
-	test("footer text is defined", () => {
+	test("footer text constant is defined", () => {
 		expect(EMBED_FOOTER_TEXT).toBe("Devin Discord Bot");
+	});
+
+	test("getEmbedFooterText returns correct text for given bot name", () => {
+		expect(getEmbedFooterText("Devin")).toBe("Devin Discord Bot");
+		expect(getEmbedFooterText("MyBot")).toBe("MyBot Discord Bot");
 	});
 
 	test("polling intervals are reasonable", () => {

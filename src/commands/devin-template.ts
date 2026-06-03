@@ -1,5 +1,5 @@
 /**
- * Slash command and component handlers for `/devin-template`.
+ * Slash command and component handlers for `/devin template`.
  *
  * Presents a select menu of pre-built task templates, then shows
  * a modal form for the selected template. On submission, builds
@@ -12,7 +12,6 @@ import {
 	EmbedBuilder,
 	ModalBuilder,
 	type ModalSubmitInteraction,
-	SlashCommandBuilder,
 	StringSelectMenuBuilder,
 	type StringSelectMenuInteraction,
 	TextInputBuilder,
@@ -20,9 +19,9 @@ import {
 } from "discord.js";
 import {
 	EMBED_COLORS,
-	EMBED_FOOTER_TEXT,
 	THREAD_AUTO_ARCHIVE_DURATION,
 	THREAD_NAME_MAX_LENGTH,
+	getEmbedFooterText,
 } from "../config.js";
 import { createSession } from "../services/devin-api.js";
 import { createLogger } from "../services/logger.js";
@@ -32,17 +31,18 @@ import type { BotConfig, ThreadableChannel } from "../types/index.js";
 
 const log = createLogger("Command:DevinTemplate");
 
-/** Slash command definition for `/devin-template` */
-export const devinTemplateCommand = new SlashCommandBuilder()
-	.setName("devin-template")
-	.setDescription("Start a Devin session from a template");
-
 /**
  * Displays the template selection dropdown menu.
  *
  * @param interaction - Discord slash command interaction
+ * @param _config - Validated bot configuration (unused)
+ * @param _sessionManager - Session tracking manager instance (unused)
  */
-export async function handleDevinTemplate(interaction: ChatInputCommandInteraction): Promise<void> {
+export async function handleDevinTemplate(
+	interaction: ChatInputCommandInteraction,
+	_config: BotConfig,
+	_sessionManager: SessionManager,
+): Promise<void> {
 	const options = TEMPLATES.map((t) => ({
 		label: t.name,
 		description: t.description,
@@ -144,7 +144,7 @@ export async function handleTemplateSubmit(
 	const { session_id, url } = await createSession(config.devinApiKey, prompt);
 	log.info(`Template session created: ${session_id}`);
 
-	const threadName = `Devin: ${template.name}`.slice(0, THREAD_NAME_MAX_LENGTH);
+	const threadName = `${config.botName}: ${template.name}`.slice(0, THREAD_NAME_MAX_LENGTH);
 	const thread = await channel.threads.create({
 		name: threadName,
 		autoArchiveDuration: THREAD_AUTO_ARCHIVE_DURATION,
@@ -152,7 +152,7 @@ export async function handleTemplateSubmit(
 	});
 
 	const embed = new EmbedBuilder()
-		.setTitle(`Devin Session: ${template.name}`)
+		.setTitle(`${config.botName} Session: ${template.name}`)
 		.setDescription(prompt)
 		.setColor(EMBED_COLORS.working)
 		.addFields(
@@ -161,7 +161,7 @@ export async function handleTemplateSubmit(
 			{ name: "View Session", value: `[Open in Devin](${url})` },
 		)
 		.setTimestamp()
-		.setFooter({ text: EMBED_FOOTER_TEXT });
+		.setFooter({ text: getEmbedFooterText(config.botName) });
 
 	await sessionManager.track(session_id, thread, url, interaction.user.id);
 	await thread.send({ embeds: [embed] });

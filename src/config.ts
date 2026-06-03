@@ -20,11 +20,24 @@ export const EMBED_COLORS = {
 /** Footer text appended to all bot embeds */
 export const EMBED_FOOTER_TEXT = "Devin Discord Bot";
 
+/**
+ * Returns the footer text for bot embeds using the configured bot name.
+ *
+ * @param botName - The configured bot display name
+ * @returns Footer string with bot name
+ */
+export function getEmbedFooterText(botName: string): string {
+	return `${botName} Discord Bot`;
+}
+
 /** Auto-archive duration for session threads (24 hours in minutes) */
 export const THREAD_AUTO_ARCHIVE_DURATION = 1440 as const;
 
 /** Maximum character length for Discord thread names */
 export const THREAD_NAME_MAX_LENGTH = 100;
+
+/** Maximum allowed length for the BOT_NAME environment variable */
+export const BOT_NAME_MAX_LENGTH = 32;
 
 /** Initial polling interval for session updates (milliseconds) */
 export const POLL_INTERVAL_INITIAL = 5_000;
@@ -54,6 +67,7 @@ export function loadConfig(): BotConfig {
 	const discordClientId = process.env.DISCORD_CLIENT_ID;
 	const devinApiKey = process.env.DEVIN_API_KEY;
 	const rawLogLevel = process.env.LOG_LEVEL ?? "info";
+	const rawBotName = process.env.BOT_NAME ?? "Devin";
 
 	if (!discordBotToken) missing.push("DISCORD_BOT_TOKEN");
 	if (!discordClientId) missing.push("DISCORD_CLIENT_ID");
@@ -65,11 +79,13 @@ export function loadConfig(): BotConfig {
 	}
 
 	const logLevel: LogLevel = VALID_LOG_LEVELS.has(rawLogLevel) ? (rawLogLevel as LogLevel) : "info";
+	const botName = rawBotName.trim().slice(0, BOT_NAME_MAX_LENGTH) || "Devin";
 
 	return {
 		discordBotToken: discordBotToken as string,
 		discordClientId: discordClientId as string,
 		devinApiKey: devinApiKey as string,
 		logLevel,
+		botName,
 	};
 }

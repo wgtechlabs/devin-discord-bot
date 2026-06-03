@@ -26,7 +26,7 @@ A self-hosted Discord bot that integrates with the [Devin AI](https://devin.ai) 
 
 ## Features
 
-- **Slash Commands** — `/devin`, `/devin-reply`, `/devin-stop`, `/devin-sessions`, `/devin-template`
+- **Slash Commands** — `/devin start`, `/devin reply`, `/devin stop`, `/devin sessions`, `/devin template`
 - **@Mention Support** — Tag the bot in any channel to start a session
 - **Threaded Conversations** — Each session gets a dedicated thread with real-time updates
 - **Adaptive Polling** — Fast updates during active work, slower when idle
@@ -34,6 +34,7 @@ A self-hosted Discord bot that integrates with the [Devin AI](https://devin.ai) 
 - **File Attachments** — Upload files directly to Devin via Discord
 - **Thread Keywords** — `mute`, `unmute`, `!aside`, `EXIT` for in-thread control
 - **Status Embeds** — Color-coded session status with emoji indicators
+- **Customizable Bot Name** — Set `BOT_NAME` in `.env` to rebrand embed headers and thread names
 - **Self-Hosted** — Full control over your data and deployment
 
 ## Tech Stack
@@ -79,6 +80,9 @@ Edit `.env` with your credentials:
 DISCORD_BOT_TOKEN=your_bot_token
 DISCORD_CLIENT_ID=your_client_id
 DEVIN_API_KEY=apk_your_api_key
+
+# Optional — customize the bot's display name in embeds and thread names
+# BOT_NAME=Devin
 ```
 
 ### 3. Run
@@ -98,11 +102,11 @@ bun run start
 
 | Command | Description |
 |---------|-------------|
-| `/devin task:` | Start a new Devin session with a freeform task |
-| `/devin-template` | Start a session from a pre-built template |
-| `/devin-reply message:` | Send a message to Devin (use in a session thread) |
-| `/devin-stop` | Terminate a session (use in a session thread) |
-| `/devin-sessions` | List all active sessions |
+| `/devin start task:` | Start a new Devin session with a freeform task |
+| `/devin template` | Start a session from a pre-built template |
+| `/devin reply message:` | Send a message to Devin (use in a session thread) |
+| `/devin stop` | Terminate a session (use in a session thread) |
+| `/devin sessions` | List all active sessions |
 
 ### @Mention
 
@@ -146,12 +150,12 @@ src/
 ├── index.ts                  # Bot entry point
 ├── config.ts                 # Environment config and constants
 ├── commands/
-│   ├── index.ts              # Command registry and routing
-│   ├── devin.ts              # /devin — start a session
-│   ├── devin-reply.ts        # /devin-reply — send message to session
-│   ├── devin-stop.ts         # /devin-stop — terminate session
-│   ├── devin-sessions.ts     # /devin-sessions — list active sessions
-│   └── devin-template.ts     # /devin-template — template-based sessions
+│   ├── index.ts              # Unified /devin command and subcommand routing
+│   ├── devin.ts              # /devin start — start a session
+│   ├── devin-reply.ts        # /devin reply — send message to session
+│   ├── devin-stop.ts         # /devin stop — terminate session
+│   ├── devin-sessions.ts     # /devin sessions — list active sessions
+│   └── devin-template.ts     # /devin template — template-based sessions
 ├── handlers/
 │   ├── interaction.ts        # Slash command and component router
 │   └── message.ts            # @mention and thread message handler
