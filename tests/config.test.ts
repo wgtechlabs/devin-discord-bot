@@ -32,12 +32,18 @@ describe("loadConfig", () => {
 
 	test("defaults bot name to Devin when BOT_NAME is not set", () => {
 		const original = process.env.BOT_NAME;
-		process.env.BOT_NAME = undefined;
+		// biome-ignore lint/performance/noDelete: Test requires unsetting env var.
+		delete process.env.BOT_NAME;
 
 		const config = loadConfig();
 		expect(config.botName).toBe("Devin");
 
-		process.env.BOT_NAME = original;
+		if (original === undefined) {
+			// biome-ignore lint/performance/noDelete: Restore env var to unset state.
+			delete process.env.BOT_NAME;
+		} else {
+			process.env.BOT_NAME = original;
+		}
 	});
 
 	test("uses custom bot name from BOT_NAME env variable", () => {
@@ -47,7 +53,12 @@ describe("loadConfig", () => {
 		const config = loadConfig();
 		expect(config.botName).toBe("MyBot");
 
-		process.env.BOT_NAME = original;
+		if (original === undefined) {
+			// biome-ignore lint/performance/noDelete: Restore env var to unset state.
+			delete process.env.BOT_NAME;
+		} else {
+			process.env.BOT_NAME = original;
+		}
 	});
 
 	test("truncates bot name exceeding max length", () => {
@@ -57,7 +68,12 @@ describe("loadConfig", () => {
 		const config = loadConfig();
 		expect(config.botName.length).toBe(BOT_NAME_MAX_LENGTH);
 
-		process.env.BOT_NAME = original;
+		if (original === undefined) {
+			// biome-ignore lint/performance/noDelete: Restore env var to unset state.
+			delete process.env.BOT_NAME;
+		} else {
+			process.env.BOT_NAME = original;
+		}
 	});
 
 	test("falls back to Devin for whitespace-only bot name", () => {
@@ -67,7 +83,12 @@ describe("loadConfig", () => {
 		const config = loadConfig();
 		expect(config.botName).toBe("Devin");
 
-		process.env.BOT_NAME = original;
+		if (original === undefined) {
+			// biome-ignore lint/performance/noDelete: Restore env var to unset state.
+			delete process.env.BOT_NAME;
+		} else {
+			process.env.BOT_NAME = original;
+		}
 	});
 
 	test("defaults log level to info for invalid values", () => {
