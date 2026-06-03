@@ -38,6 +38,15 @@ export async function handleDevinReply(
 		return;
 	}
 
+	const tracked = sessionManager.getTracked(sessionId);
+	if (explicitId && tracked && tracked.userId !== interaction.user.id) {
+		await interaction.reply({
+			content: "You can only send messages to sessions that you started.",
+			ephemeral: true,
+		});
+		return;
+	}
+
 	await interaction.deferReply({ ephemeral: true });
 
 	let message = interaction.options.getString("message", true);

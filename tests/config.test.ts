@@ -8,6 +8,7 @@
 import { describe, expect, test } from "bun:test";
 import { loadConfig } from "../src/config.js";
 import {
+	BOT_NAME_MAX_LENGTH,
 	DEVIN_API_BASE_URL,
 	EMBED_COLORS,
 	EMBED_FOOTER_TEXT,
@@ -45,6 +46,26 @@ describe("loadConfig", () => {
 
 		const config = loadConfig();
 		expect(config.botName).toBe("MyBot");
+
+		process.env.BOT_NAME = original;
+	});
+
+	test("truncates bot name exceeding max length", () => {
+		const original = process.env.BOT_NAME;
+		process.env.BOT_NAME = "A".repeat(BOT_NAME_MAX_LENGTH + 20);
+
+		const config = loadConfig();
+		expect(config.botName.length).toBe(BOT_NAME_MAX_LENGTH);
+
+		process.env.BOT_NAME = original;
+	});
+
+	test("falls back to Devin for whitespace-only bot name", () => {
+		const original = process.env.BOT_NAME;
+		process.env.BOT_NAME = "   ";
+
+		const config = loadConfig();
+		expect(config.botName).toBe("Devin");
 
 		process.env.BOT_NAME = original;
 	});

@@ -63,7 +63,9 @@ export async function handleDevin(
 	const { session_id, url } = await createSession(config.devinApiKey, prompt);
 	log.info(`Session created: ${session_id}`);
 
-	const threadName = `${config.botName}: ${task.slice(0, THREAD_NAME_MAX_LENGTH - config.botName.length - 2)}`;
+	const prefix = `${config.botName}: `;
+	const maxTaskLen = Math.max(0, THREAD_NAME_MAX_LENGTH - prefix.length);
+	const threadName = `${prefix}${task.slice(0, maxTaskLen)}`;
 	const thread = await channel.threads.create({
 		name: threadName,
 		autoArchiveDuration: THREAD_AUTO_ARCHIVE_DURATION,
