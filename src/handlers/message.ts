@@ -217,40 +217,45 @@ async function handleMention(
 
 	log.info(`Session created via @mention: ${session_id}`);
 
-	const prefix = `${config.botName}: `;
-	const maxTaskLen = Math.max(0, THREAD_NAME_MAX_LENGTH - prefix.length);
-	const threadName = `${prefix}${(task || "New session").slice(0, maxTaskLen)}`;
-	const thread = await channel.threads.create({
-		name: threadName,
-		autoArchiveDuration: THREAD_AUTO_ARCHIVE_DURATION,
-		reason: `Devin session ${session_id}`,
-	});
-
-	const embed = new EmbedBuilder()
-		.setTitle("Devin Session Started")
-		.setDescription(task || "*File attachment session*")
-		.setColor(EMBED_COLORS.working)
-		.addFields(
-			{ name: "Status", value: "Working", inline: true },
-			{ name: "Session ID", value: `\`${session_id}\``, inline: true },
-			{ name: "View Session", value: `[Open in Devin](${url})` },
-		)
-		.setTimestamp()
-		.setFooter({ text: `Requested by ${message.author.tag}` });
-
-	if (message.attachments.size > 0) {
-		embed.addFields({
-			name: "Attachments",
-			value: [...message.attachments.values()].map((a) => a.name).join(", "),
-			inline: true,
+	try {
+		const prefix = `${config.botName}: `;
+		const maxTaskLen = Math.max(0, THREAD_NAME_MAX_LENGTH - prefix.length);
+		const threadName = `${prefix}${(task || "New session").slice(0, maxTaskLen)}`;
+		const thread = await channel.threads.create({
+			name: threadName,
+			autoArchiveDuration: THREAD_AUTO_ARCHIVE_DURATION,
+			reason: `Devin session ${session_id}`,
 		});
+
+		const embed = new EmbedBuilder()
+			.setTitle("Devin Session Started")
+			.setDescription(task || "*File attachment session*")
+			.setColor(EMBED_COLORS.working)
+			.addFields(
+				{ name: "Status", value: "Working", inline: true },
+				{ name: "Session ID", value: `\`${session_id}\``, inline: true },
+				{ name: "View Session", value: `[Open in Devin](${url})` },
+			)
+			.setTimestamp()
+			.setFooter({ text: `Requested by ${message.author.tag}` });
+
+		if (message.attachments.size > 0) {
+			embed.addFields({
+				name: "Attachments",
+				value: [...message.attachments.values()].map((a) => a.name).join(", "),
+				inline: true,
+			});
+		}
+
+		await sessionManager.track(session_id, thread, url, message.author.id, {
+			originalMessageId: message.id,
+			originalChannelId: message.channelId,
+		});
+
+		await thread.send({ embeds: [embed] });
+		await message.reply(`Session started! Follow progress in ${thread}`);
+	} catch (err) {
+		queue?.releaseSession(session_id, message.author.id);
+		throw err;
 	}
-
-	await sessionManager.track(session_id, thread, url, message.author.id, {
-		originalMessageId: message.id,
-		originalChannelId: message.channelId,
-	});
-
-	await thread.send({ embeds: [embed] });
-	await message.reply(`Session started! Follow progress in ${thread}`);
 }
