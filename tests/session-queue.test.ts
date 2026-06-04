@@ -132,6 +132,51 @@ describe("SessionQueue", () => {
 		await expect(pending).rejects.toThrow("Session queue was shut down.");
 	});
 
+	test("enqueue after destroy throws DESTROYED error", async () => {
+		queue.destroy();
+
+		try {
+			await queue.enqueue("user-1", "task 1", mockCreateFn);
+			expect(true).toBe(false);
+		} catch (err) {
+			expect(err).toBeInstanceOf(SessionQueueError);
+			expect((err as SessionQueueError).code).toBe("DESTROYED");
+		}
+	});
+
+	test("queued request times out after queueTimeout", async () => {
+		const shortTimeoutQueue = new SessionQueue(
+			{
+				maxConcurrentSessions: 1,
+				maxSessionsPerUser: 1,
+				maxQueueSize: 5,
+				queueTimeout: 50,
+			},
+			rateLimiter,
+		);
+
+		// Fill the one slot with a slow session so the next request is queued
+		const slowCreate = (_prompt: string) =>
+			new Promise<{ session_id: string; url: string }>((resolve) =>
+				setTimeout(() => resolve({ session_id: "slow-session", url: "https://example.com" }), 500),
+			);
+		shortTimeoutQueue.enqueue("user-1", "slow task", slowCreate).catch(() => {});
+
+		// Await the queued request — it should be rejected with TIMEOUT once the
+		// interval fires (queueTimeout=50ms so interval=50ms, max wait ~100ms).
+		let timeoutError: unknown;
+		try {
+			await shortTimeoutQueue.enqueue("user-2", "queued task", mockCreateFn);
+		} catch (err) {
+			timeoutError = err;
+		}
+
+		shortTimeoutQueue.destroy();
+
+		expect(timeoutError).toBeInstanceOf(SessionQueueError);
+		expect((timeoutError as SessionQueueError).code).toBe("TIMEOUT");
+	});
+
 	test("SessionQueueError has correct code and message", () => {
 		const err = new SessionQueueError("QUEUE_FULL", "Queue is full");
 		expect(err.code).toBe("QUEUE_FULL");

@@ -60,6 +60,7 @@ export class SessionQueue {
 	private readonly activeSessionsByUser = new Map<string, Set<string>>();
 	private activeSessions = 0;
 	private timeoutTimer: ReturnType<typeof setInterval> | null = null;
+	private destroyed = false;
 
 	constructor(config: Partial<SessionQueueConfig> = {}, rateLimiter?: RateLimiter) {
 		this.config = { ...DEFAULT_QUEUE_CONFIG, ...config };
@@ -82,6 +83,10 @@ export class SessionQueue {
 		prompt: string,
 		createFn: (prompt: string) => Promise<{ session_id: string; url: string }>,
 	): Promise<SessionQueueResult> {
+		if (this.destroyed) {
+			throw new SessionQueueError("DESTROYED", "Session queue has been shut down.");
+		}
+
 		const userSessions = this.activeSessionsByUser.get(userId)?.size ?? 0;
 
 		if (userSessions >= this.config.maxSessionsPerUser) {
@@ -128,22 +133,23 @@ export class SessionQueue {
 	 * @param userId - User who owned the session
 	 */
 	releaseSession(sessionId: string, userId: string): void {
-		this.activeSessions = Math.max(0, this.activeSessions - 1);
-
 		const userSet = this.activeSessionsByUser.get(userId);
-		if (userSet) {
+		if (userSet?.has(sessionId)) {
 			userSet.delete(sessionId);
 			if (userSet.size === 0) {
 				this.activeSessionsByUser.delete(userId);
 			}
+			this.activeSessions = Math.max(0, this.activeSessions - 1);
+
+			log.info(
+				`Released session ${sessionId} for user ${userId} ` +
+					`(${this.activeSessions}/${this.config.maxConcurrentSessions} active, ${this.queue.length} queued)`,
+			);
+
+			this.processNext();
+		} else {
+			log.warn(`Attempted to release untracked session ${sessionId} for user ${userId}`);
 		}
-
-		log.info(
-			`Released session ${sessionId} for user ${userId} ` +
-				`(${this.activeSessions}/${this.config.maxConcurrentSessions} active, ${this.queue.length} queued)`,
-		);
-
-		this.processNext();
 	}
 
 	/**
@@ -183,6 +189,7 @@ export class SessionQueue {
 	 * Cleans up timers and rejects all pending requests.
 	 */
 	destroy(): void {
+		this.destroyed = true;
 		if (this.timeoutTimer) {
 			clearInterval(this.timeoutTimer);
 			this.timeoutTimer = null;
@@ -199,15 +206,26 @@ export class SessionQueue {
 		createFn: (prompt: string) => Promise<{ session_id: string; url: string }>,
 	): Promise<SessionQueueResult> {
 		this.activeSessions++;
+
+		// Track in-flight session with a temporary placeholder so per-user limits
+		// are enforced even while the API call is pending.
+		const tempId = `pending-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+		if (!this.activeSessionsByUser.has(userId)) {
+			this.activeSessionsByUser.set(userId, new Set());
+		}
+		this.activeSessionsByUser.get(userId)?.add(tempId);
+
 		const startTime = Date.now();
 
 		try {
 			const result = await this.rateLimiter.schedule(userId, () => createFn(prompt));
 
-			if (!this.activeSessionsByUser.has(userId)) {
-				this.activeSessionsByUser.set(userId, new Set());
+			// Replace placeholder with the real session ID.
+			const userSet = this.activeSessionsByUser.get(userId);
+			if (userSet) {
+				userSet.delete(tempId);
+				userSet.add(result.session_id);
 			}
-			this.activeSessionsByUser.get(userId)?.add(result.session_id);
 
 			return {
 				sessionId: result.session_id,
@@ -215,6 +233,14 @@ export class SessionQueue {
 				queuedDuration: Date.now() - startTime,
 			};
 		} catch (err) {
+			// Remove the placeholder and release the slot on failure.
+			const userSet = this.activeSessionsByUser.get(userId);
+			if (userSet) {
+				userSet.delete(tempId);
+				if (userSet.size === 0) {
+					this.activeSessionsByUser.delete(userId);
+				}
+			}
 			this.activeSessions = Math.max(0, this.activeSessions - 1);
 			throw err;
 		}
@@ -244,6 +270,7 @@ export class SessionQueue {
 	}
 
 	private startTimeoutCheck(): void {
+		const interval = Math.min(this.config.queueTimeout, 30_000);
 		this.timeoutTimer = setInterval(() => {
 			const now = Date.now();
 			const timedOut: QueuedSessionRequest[] = [];
@@ -268,7 +295,7 @@ export class SessionQueue {
 			if (timedOut.length > 0) {
 				this.updatePositions();
 			}
-		}, 30_000);
+		}, interval);
 	}
 }
 

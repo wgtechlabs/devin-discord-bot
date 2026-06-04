@@ -86,7 +86,7 @@ export class RateLimiter {
 	 * Returns pending request count for a specific user.
 	 */
 	getUserQueueSize(userId: string): number {
-		return this.queue.filter((r) => r.userId === userId).length;
+		return this.userRequestCounts.get(userId) ?? 0;
 	}
 
 	/**
