@@ -106,7 +106,7 @@ describe("SessionQueue", () => {
 
 		try {
 			await queue.enqueue("user-99", "overflow task", mockCreateFn);
-			expect(true).toBe(false);
+			throw new Error("Expected enqueue to throw but it did not");
 		} catch (err) {
 			expect(err).toBeInstanceOf(SessionQueueError);
 			expect((err as SessionQueueError).code).toBe("QUEUE_FULL");
@@ -137,7 +137,7 @@ describe("SessionQueue", () => {
 
 		try {
 			await queue.enqueue("user-1", "task 1", mockCreateFn);
-			expect(true).toBe(false);
+			throw new Error("Expected enqueue to throw but it did not");
 		} catch (err) {
 			expect(err).toBeInstanceOf(SessionQueueError);
 			expect((err as SessionQueueError).code).toBe("DESTROYED");
