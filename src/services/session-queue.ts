@@ -242,6 +242,7 @@ export class SessionQueue {
 				}
 			}
 			this.activeSessions = Math.max(0, this.activeSessions - 1);
+			this.processNext();
 			throw err;
 		}
 	}
@@ -250,9 +251,19 @@ export class SessionQueue {
 		if (this.queue.length === 0) return;
 		if (this.activeSessions >= this.config.maxConcurrentSessions) return;
 
-		const request = this.queue.shift();
-		if (!request) return;
+		// Find the first queued request whose user hasn't hit their per-user limit.
+		let requestIndex = -1;
+		for (let i = 0; i < this.queue.length; i++) {
+			const userSessions = this.activeSessionsByUser.get(this.queue[i].userId)?.size ?? 0;
+			if (userSessions < this.config.maxSessionsPerUser) {
+				requestIndex = i;
+				break;
+			}
+		}
 
+		if (requestIndex === -1) return;
+
+		const [request] = this.queue.splice(requestIndex, 1);
 		this.updatePositions();
 
 		try {

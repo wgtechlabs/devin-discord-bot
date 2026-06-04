@@ -177,6 +177,54 @@ describe("SessionQueue", () => {
 		expect((timeoutError as SessionQueueError).code).toBe("TIMEOUT");
 	});
 
+	test("queue drains after session creation failure", async () => {
+		const failQueue = new SessionQueue(
+			{ maxConcurrentSessions: 1, maxSessionsPerUser: 2, maxQueueSize: 5, queueTimeout: 5000 },
+			rateLimiter,
+		);
+
+		const failCreate = (_prompt: string): Promise<{ session_id: string; url: string }> => {
+			return Promise.reject(new Error("API failure"));
+		};
+
+		// Fill the single slot with a session that will fail
+		const failPromise = failQueue.enqueue("user-1", "failing task", failCreate).catch(() => {});
+		await failPromise;
+
+		// Now a queued request should still be processable after the failure freed the slot
+		const result = await failQueue.enqueue("user-2", "recovery task", mockCreateFn);
+		expect(result.sessionId).toContain("session-");
+
+		failQueue.destroy();
+	});
+
+	test("processNext skips users at per-user limit", async () => {
+		const strictQueue = new SessionQueue(
+			{ maxConcurrentSessions: 2, maxSessionsPerUser: 1, maxQueueSize: 5, queueTimeout: 5000 },
+			rateLimiter,
+		);
+
+		// Fill global capacity: user-1 gets slot 1, user-2 gets slot 2
+		await strictQueue.enqueue("user-1", "task 1", mockCreateFn);
+		const r2 = await strictQueue.enqueue("user-2", "task 2", mockCreateFn);
+
+		// Both slots full — these go into the queue
+		strictQueue.enqueue("user-1", "user-1 extra", mockCreateFn).catch(() => {});
+		const user3Queued = strictQueue.enqueue("user-3", "user-3 task", mockCreateFn);
+
+		// Release user-2's slot. processNext should skip user-1 (already at limit)
+		// and pick user-3 instead.
+		strictQueue.releaseSession(r2.sessionId, "user-2");
+
+		const result = await user3Queued;
+		expect(result.sessionId).toContain("session-");
+		expect(strictQueue.getUserActiveSessions("user-3")).toBe(1);
+		// user-1 should still have exactly 1 active (not 2)
+		expect(strictQueue.getUserActiveSessions("user-1")).toBe(1);
+
+		strictQueue.destroy();
+	});
+
 	test("SessionQueueError has correct code and message", () => {
 		const err = new SessionQueueError("QUEUE_FULL", "Queue is full");
 		expect(err.code).toBe("QUEUE_FULL");
