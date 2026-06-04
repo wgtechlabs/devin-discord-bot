@@ -225,6 +225,35 @@ describe("SessionQueue", () => {
 		strictQueue.destroy();
 	});
 
+	test("enqueue counts queued requests toward per-user limit", async () => {
+		const fairQueue = new SessionQueue(
+			{ maxConcurrentSessions: 1, maxSessionsPerUser: 2, maxQueueSize: 10, queueTimeout: 5000 },
+			rateLimiter,
+		);
+
+		// Fill the single global slot with user-2
+		await fairQueue.enqueue("user-2", "blocker", mockCreateFn);
+
+		// user-1 queues 2 requests (their per-user limit)
+		fairQueue.enqueue("user-1", "queued 1", mockCreateFn).catch(() => {});
+		fairQueue.enqueue("user-1", "queued 2", mockCreateFn).catch(() => {});
+
+		// user-1's 3rd request should be rejected — 0 active + 2 queued = 2 >= maxSessionsPerUser
+		try {
+			await fairQueue.enqueue("user-1", "queued 3", mockCreateFn);
+			throw new Error("Expected enqueue to throw but it did not");
+		} catch (err) {
+			expect(err).toBeInstanceOf(SessionQueueError);
+			expect((err as SessionQueueError).code).toBe("USER_LIMIT");
+		}
+
+		// user-3 should still be able to queue (they have 0 active + 0 queued)
+		fairQueue.enqueue("user-3", "user-3 task", mockCreateFn).catch(() => {});
+		expect(fairQueue.getQueuePosition("user-3")).toBe(3);
+
+		fairQueue.destroy();
+	});
+
 	test("SessionQueueError has correct code and message", () => {
 		const err = new SessionQueueError("QUEUE_FULL", "Queue is full");
 		expect(err.code).toBe("QUEUE_FULL");

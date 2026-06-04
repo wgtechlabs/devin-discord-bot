@@ -87,9 +87,10 @@ export class SessionQueue {
 			throw new SessionQueueError("DESTROYED", "Session queue has been shut down.");
 		}
 
-		const userSessions = this.activeSessionsByUser.get(userId)?.size ?? 0;
+		const userActiveSessions = this.activeSessionsByUser.get(userId)?.size ?? 0;
+		const userQueuedRequests = this.queue.filter((r) => r.userId === userId).length;
 
-		if (userSessions >= this.config.maxSessionsPerUser) {
+		if (userActiveSessions + userQueuedRequests >= this.config.maxSessionsPerUser) {
 			throw new SessionQueueError(
 				"USER_LIMIT",
 				`You have reached the maximum of ${this.config.maxSessionsPerUser} concurrent sessions. Please wait for a session to finish or stop one with \`/devin stop\`.`,
