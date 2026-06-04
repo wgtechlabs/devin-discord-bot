@@ -19,6 +19,7 @@ import {
 } from "../services/devin-api.js";
 import { createLogger } from "../services/logger.js";
 import type { SessionManager } from "../services/session-manager.js";
+import { SessionQueueError } from "../services/session-queue.js";
 import type { BotConfig } from "../types/index.js";
 import { TERMINAL_STATUSES } from "../types/index.js";
 
@@ -189,7 +190,31 @@ async function handleMention(
 	const attachmentLines = await processMessageAttachments(config.devinApiKey, message);
 	const prompt = (task || "See attached files.") + attachmentLines;
 
-	const { session_id, url } = await createSession(config.devinApiKey, prompt);
+	const queue = sessionManager.getQueue();
+
+	let session_id: string;
+	let url: string;
+
+	if (queue) {
+		try {
+			const result = await queue.enqueue(message.author.id, prompt, (p) =>
+				createSession(config.devinApiKey, p),
+			);
+			session_id = result.sessionId;
+			url = result.url;
+		} catch (err) {
+			if (err instanceof SessionQueueError) {
+				await message.reply(err.message);
+				return;
+			}
+			throw err;
+		}
+	} else {
+		const result = await createSession(config.devinApiKey, prompt);
+		session_id = result.session_id;
+		url = result.url;
+	}
+
 	log.info(`Session created via @mention: ${session_id}`);
 
 	const prefix = `${config.botName}: `;

@@ -16,6 +16,7 @@ import {
 import { createSession, uploadAttachment } from "../services/devin-api.js";
 import { createLogger } from "../services/logger.js";
 import type { SessionManager } from "../services/session-manager.js";
+import { SessionQueueError } from "../services/session-queue.js";
 import type { BotConfig, ThreadableChannel } from "../types/index.js";
 
 const log = createLogger("Command:Devin");
@@ -60,7 +61,35 @@ export async function handleDevin(
 		}
 	}
 
-	const { session_id, url } = await createSession(config.devinApiKey, prompt);
+	const queue = sessionManager.getQueue();
+
+	let session_id: string;
+	let url: string;
+
+	if (queue) {
+		try {
+			const result = await queue.enqueue(interaction.user.id, prompt, (p) =>
+				createSession(config.devinApiKey, p),
+			);
+			session_id = result.sessionId;
+			url = result.url;
+
+			if (result.queuedDuration > 1000) {
+				log.info(`Session ${session_id} waited ${result.queuedDuration}ms in queue`);
+			}
+		} catch (err) {
+			if (err instanceof SessionQueueError) {
+				await interaction.editReply(err.message);
+				return;
+			}
+			throw err;
+		}
+	} else {
+		const result = await createSession(config.devinApiKey, prompt);
+		session_id = result.session_id;
+		url = result.url;
+	}
+
 	log.info(`Session created: ${session_id}`);
 
 	const prefix = `${config.botName}: `;

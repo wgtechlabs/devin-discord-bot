@@ -24,6 +24,7 @@ import type {
 import { TERMINAL_STATUSES } from "../types/index.js";
 import { getSessionState } from "./devin-api.js";
 import { createLogger } from "./logger.js";
+import type { SessionQueue } from "./session-queue.js";
 
 const log = createLogger("SessionManager");
 
@@ -61,6 +62,8 @@ export class SessionManager {
 	private client: Client;
 	/** Bot configuration with API credentials */
 	private config: BotConfig | null = null;
+	/** Session queue for concurrency control */
+	private queue: SessionQueue | null = null;
 
 	constructor(client: Client) {
 		this.client = client;
@@ -74,6 +77,22 @@ export class SessionManager {
 	 */
 	setConfig(config: BotConfig): void {
 		this.config = config;
+	}
+
+	/**
+	 * Injects the session queue for concurrency control.
+	 *
+	 * @param queue - Session queue instance
+	 */
+	setQueue(queue: SessionQueue): void {
+		this.queue = queue;
+	}
+
+	/**
+	 * Returns the session queue instance for external use.
+	 */
+	getQueue(): SessionQueue | null {
+		return this.queue;
 	}
 
 	/**
@@ -186,6 +205,7 @@ export class SessionManager {
 		});
 
 		await this.updateOriginalReaction(session, "stop");
+		this.queue?.releaseSession(sessionId, session.userId);
 	}
 
 	/**
@@ -262,6 +282,7 @@ export class SessionManager {
 				this.stopPolling(sessionId);
 				await this.postStatusChange(session, state.status);
 				await this.updateOriginalReaction(session, state.status);
+				this.queue?.releaseSession(sessionId, session.userId);
 			}
 		}
 	}
