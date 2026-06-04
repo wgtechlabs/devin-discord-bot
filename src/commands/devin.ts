@@ -16,6 +16,7 @@ import {
 import { createSession, uploadAttachment } from "../services/devin-api.js";
 import { createLogger } from "../services/logger.js";
 import type { SessionManager } from "../services/session-manager.js";
+import { SessionQueueError } from "../services/session-queue.js";
 import type { BotConfig, ThreadableChannel } from "../types/index.js";
 
 const log = createLogger("Command:Devin");
@@ -60,31 +61,68 @@ export async function handleDevin(
 		}
 	}
 
-	const { session_id, url } = await createSession(config.devinApiKey, prompt);
+	const queue = sessionManager.getQueue();
+
+	let session_id: string;
+	let url: string;
+
+	if (queue) {
+		try {
+			const result = await queue.enqueue(interaction.user.id, prompt, (p) =>
+				createSession(config.devinApiKey, p),
+			);
+			session_id = result.sessionId;
+			url = result.url;
+
+			if (result.queuedDuration > 1000) {
+				log.info(`Session ${session_id} waited ${result.queuedDuration}ms in queue`);
+			}
+		} catch (err) {
+			if (err instanceof SessionQueueError) {
+				await interaction.editReply(err.message);
+				return;
+			}
+			throw err;
+		}
+	} else {
+		const result = await createSession(config.devinApiKey, prompt);
+		session_id = result.session_id;
+		url = result.url;
+	}
+
 	log.info(`Session created: ${session_id}`);
 
-	const prefix = `${config.botName}: `;
-	const maxTaskLen = Math.max(0, THREAD_NAME_MAX_LENGTH - prefix.length);
-	const threadName = `${prefix}${task.slice(0, maxTaskLen)}`;
-	const thread = await channel.threads.create({
-		name: threadName,
-		autoArchiveDuration: THREAD_AUTO_ARCHIVE_DURATION,
-		reason: `Devin session ${session_id}`,
-	});
+	let tracked = false;
+	try {
+		const prefix = `${config.botName}: `;
+		const maxTaskLen = Math.max(0, THREAD_NAME_MAX_LENGTH - prefix.length);
+		const threadName = `${prefix}${task.slice(0, maxTaskLen)}`;
+		const thread = await channel.threads.create({
+			name: threadName,
+			autoArchiveDuration: THREAD_AUTO_ARCHIVE_DURATION,
+			reason: `Devin session ${session_id}`,
+		});
 
-	const embed = new EmbedBuilder()
-		.setTitle(`${config.botName} Session Started`)
-		.setDescription(task)
-		.setColor(EMBED_COLORS.working)
-		.addFields(
-			{ name: "Status", value: "Working", inline: true },
-			{ name: "Session ID", value: `\`${session_id}\``, inline: true },
-			{ name: "View Session", value: `[Open in Devin](${url})` },
-		)
-		.setTimestamp()
-		.setFooter({ text: getEmbedFooterText(config.botName) });
+		const embed = new EmbedBuilder()
+			.setTitle(`${config.botName} Session Started`)
+			.setDescription(task)
+			.setColor(EMBED_COLORS.working)
+			.addFields(
+				{ name: "Status", value: "Working", inline: true },
+				{ name: "Session ID", value: `\`${session_id}\``, inline: true },
+				{ name: "View Session", value: `[Open in Devin](${url})` },
+			)
+			.setTimestamp()
+			.setFooter({ text: getEmbedFooterText(config.botName) });
 
-	await sessionManager.track(session_id, thread, url, interaction.user.id);
-	await thread.send({ embeds: [embed] });
-	await interaction.editReply(`Session started! Follow progress in ${thread}`);
+		await sessionManager.track(session_id, thread, url, interaction.user.id);
+		tracked = true;
+		await thread.send({ embeds: [embed] });
+		await interaction.editReply(`Session started! Follow progress in ${thread}`);
+	} catch (err) {
+		if (!tracked) {
+			queue?.releaseSession(session_id, interaction.user.id);
+		}
+		throw err;
+	}
 }

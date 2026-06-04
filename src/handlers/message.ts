@@ -19,6 +19,7 @@ import {
 } from "../services/devin-api.js";
 import { createLogger } from "../services/logger.js";
 import type { SessionManager } from "../services/session-manager.js";
+import { SessionQueueError } from "../services/session-queue.js";
 import type { BotConfig } from "../types/index.js";
 import { TERMINAL_STATUSES } from "../types/index.js";
 
@@ -189,43 +190,76 @@ async function handleMention(
 	const attachmentLines = await processMessageAttachments(config.devinApiKey, message);
 	const prompt = (task || "See attached files.") + attachmentLines;
 
-	const { session_id, url } = await createSession(config.devinApiKey, prompt);
-	log.info(`Session created via @mention: ${session_id}`);
+	const queue = sessionManager.getQueue();
 
-	const prefix = `${config.botName}: `;
-	const maxTaskLen = Math.max(0, THREAD_NAME_MAX_LENGTH - prefix.length);
-	const threadName = `${prefix}${(task || "New session").slice(0, maxTaskLen)}`;
-	const thread = await channel.threads.create({
-		name: threadName,
-		autoArchiveDuration: THREAD_AUTO_ARCHIVE_DURATION,
-		reason: `Devin session ${session_id}`,
-	});
+	let session_id: string;
+	let url: string;
 
-	const embed = new EmbedBuilder()
-		.setTitle("Devin Session Started")
-		.setDescription(task || "*File attachment session*")
-		.setColor(EMBED_COLORS.working)
-		.addFields(
-			{ name: "Status", value: "Working", inline: true },
-			{ name: "Session ID", value: `\`${session_id}\``, inline: true },
-			{ name: "View Session", value: `[Open in Devin](${url})` },
-		)
-		.setTimestamp()
-		.setFooter({ text: `Requested by ${message.author.tag}` });
-
-	if (message.attachments.size > 0) {
-		embed.addFields({
-			name: "Attachments",
-			value: [...message.attachments.values()].map((a) => a.name).join(", "),
-			inline: true,
-		});
+	if (queue) {
+		try {
+			const result = await queue.enqueue(message.author.id, prompt, (p) =>
+				createSession(config.devinApiKey, p),
+			);
+			session_id = result.sessionId;
+			url = result.url;
+		} catch (err) {
+			if (err instanceof SessionQueueError) {
+				await message.reply(err.message);
+				return;
+			}
+			throw err;
+		}
+	} else {
+		const result = await createSession(config.devinApiKey, prompt);
+		session_id = result.session_id;
+		url = result.url;
 	}
 
-	await sessionManager.track(session_id, thread, url, message.author.id, {
-		originalMessageId: message.id,
-		originalChannelId: message.channelId,
-	});
+	log.info(`Session created via @mention: ${session_id}`);
 
-	await thread.send({ embeds: [embed] });
-	await message.reply(`Session started! Follow progress in ${thread}`);
+	let tracked = false;
+	try {
+		const prefix = `${config.botName}: `;
+		const maxTaskLen = Math.max(0, THREAD_NAME_MAX_LENGTH - prefix.length);
+		const threadName = `${prefix}${(task || "New session").slice(0, maxTaskLen)}`;
+		const thread = await channel.threads.create({
+			name: threadName,
+			autoArchiveDuration: THREAD_AUTO_ARCHIVE_DURATION,
+			reason: `Devin session ${session_id}`,
+		});
+
+		const embed = new EmbedBuilder()
+			.setTitle("Devin Session Started")
+			.setDescription(task || "*File attachment session*")
+			.setColor(EMBED_COLORS.working)
+			.addFields(
+				{ name: "Status", value: "Working", inline: true },
+				{ name: "Session ID", value: `\`${session_id}\``, inline: true },
+				{ name: "View Session", value: `[Open in Devin](${url})` },
+			)
+			.setTimestamp()
+			.setFooter({ text: `Requested by ${message.author.tag}` });
+
+		if (message.attachments.size > 0) {
+			embed.addFields({
+				name: "Attachments",
+				value: [...message.attachments.values()].map((a) => a.name).join(", "),
+				inline: true,
+			});
+		}
+
+		await sessionManager.track(session_id, thread, url, message.author.id, {
+			originalMessageId: message.id,
+			originalChannelId: message.channelId,
+		});
+		tracked = true;
+
+		await thread.send({ embeds: [embed] });
+		await message.reply(`Session started! Follow progress in ${thread}`);
+	} catch (err) {
+		if (!tracked) {
+			queue?.releaseSession(session_id, message.author.id);
+		}
+		throw err;
+	}
 }
