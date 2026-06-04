@@ -169,6 +169,7 @@ export async function handleTemplateSubmit(
 
 	log.info(`Template session created: ${session_id}`);
 
+	let tracked = false;
 	try {
 		const threadName = `${config.botName}: ${template.name}`.slice(0, THREAD_NAME_MAX_LENGTH);
 		const thread = await channel.threads.create({
@@ -190,10 +191,13 @@ export async function handleTemplateSubmit(
 			.setFooter({ text: getEmbedFooterText(config.botName) });
 
 		await sessionManager.track(session_id, thread, url, interaction.user.id);
+		tracked = true;
 		await thread.send({ embeds: [embed] });
 		await interaction.editReply(`Session started! Follow progress in ${thread}`);
 	} catch (err) {
-		queue?.releaseSession(session_id, interaction.user.id);
+		if (!tracked) {
+			queue?.releaseSession(session_id, interaction.user.id);
+		}
 		throw err;
 	}
 }

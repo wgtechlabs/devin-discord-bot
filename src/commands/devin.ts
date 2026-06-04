@@ -92,6 +92,7 @@ export async function handleDevin(
 
 	log.info(`Session created: ${session_id}`);
 
+	let tracked = false;
 	try {
 		const prefix = `${config.botName}: `;
 		const maxTaskLen = Math.max(0, THREAD_NAME_MAX_LENGTH - prefix.length);
@@ -115,10 +116,13 @@ export async function handleDevin(
 			.setFooter({ text: getEmbedFooterText(config.botName) });
 
 		await sessionManager.track(session_id, thread, url, interaction.user.id);
+		tracked = true;
 		await thread.send({ embeds: [embed] });
 		await interaction.editReply(`Session started! Follow progress in ${thread}`);
 	} catch (err) {
-		queue?.releaseSession(session_id, interaction.user.id);
+		if (!tracked) {
+			queue?.releaseSession(session_id, interaction.user.id);
+		}
 		throw err;
 	}
 }

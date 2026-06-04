@@ -217,6 +217,7 @@ async function handleMention(
 
 	log.info(`Session created via @mention: ${session_id}`);
 
+	let tracked = false;
 	try {
 		const prefix = `${config.botName}: `;
 		const maxTaskLen = Math.max(0, THREAD_NAME_MAX_LENGTH - prefix.length);
@@ -251,11 +252,14 @@ async function handleMention(
 			originalMessageId: message.id,
 			originalChannelId: message.channelId,
 		});
+		tracked = true;
 
 		await thread.send({ embeds: [embed] });
 		await message.reply(`Session started! Follow progress in ${thread}`);
 	} catch (err) {
-		queue?.releaseSession(session_id, message.author.id);
+		if (!tracked) {
+			queue?.releaseSession(session_id, message.author.id);
+		}
 		throw err;
 	}
 }

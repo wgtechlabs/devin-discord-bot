@@ -56,6 +56,7 @@ export const DEFAULT_QUEUE_CONFIG: SessionQueueConfig = {
 export class SessionQueue {
 	private readonly config: SessionQueueConfig;
 	private readonly rateLimiter: RateLimiter;
+	private readonly ownedRateLimiter: boolean;
 	private readonly queue: QueuedSessionRequest[] = [];
 	private readonly activeSessionsByUser = new Map<string, Set<string>>();
 	private activeSessions = 0;
@@ -64,6 +65,7 @@ export class SessionQueue {
 
 	constructor(config: Partial<SessionQueueConfig> = {}, rateLimiter?: RateLimiter) {
 		this.config = { ...DEFAULT_QUEUE_CONFIG, ...config };
+		this.ownedRateLimiter = !rateLimiter;
 		this.rateLimiter = rateLimiter ?? new RateLimiterClass(DEFAULT_RATE_LIMIT_CONFIG);
 		this.startTimeoutCheck();
 	}
@@ -105,7 +107,7 @@ export class SessionQueue {
 		}
 
 		if (this.activeSessions < this.config.maxConcurrentSessions) {
-			return this.executeSession(userId, prompt, createFn);
+			return this.executeSession(userId, prompt, createFn, Date.now());
 		}
 
 		return new Promise<SessionQueueResult>((resolve, reject) => {
@@ -195,6 +197,9 @@ export class SessionQueue {
 			clearInterval(this.timeoutTimer);
 			this.timeoutTimer = null;
 		}
+		if (this.ownedRateLimiter) {
+			this.rateLimiter.destroy();
+		}
 		for (const request of this.queue) {
 			request.reject(new SessionQueueError("DESTROYED", "Session queue was shut down."));
 		}
@@ -205,6 +210,7 @@ export class SessionQueue {
 		userId: string,
 		prompt: string,
 		createFn: (prompt: string) => Promise<{ session_id: string; url: string }>,
+		enqueuedAt: number,
 	): Promise<SessionQueueResult> {
 		this.activeSessions++;
 
@@ -215,8 +221,6 @@ export class SessionQueue {
 			this.activeSessionsByUser.set(userId, new Set());
 		}
 		this.activeSessionsByUser.get(userId)?.add(tempId);
-
-		const startTime = Date.now();
 
 		try {
 			const result = await this.rateLimiter.schedule(userId, () => createFn(prompt));
@@ -231,7 +235,7 @@ export class SessionQueue {
 			return {
 				sessionId: result.session_id,
 				url: result.url,
-				queuedDuration: Date.now() - startTime,
+				queuedDuration: Date.now() - enqueuedAt,
 			};
 		} catch (err) {
 			// Remove the placeholder and release the slot on failure.
@@ -268,7 +272,12 @@ export class SessionQueue {
 		this.updatePositions();
 
 		try {
-			const result = await this.executeSession(request.userId, request.prompt, request.createFn);
+			const result = await this.executeSession(
+				request.userId,
+				request.prompt,
+				request.createFn,
+				request.enqueuedAt,
+			);
 			request.resolve(result);
 		} catch (err) {
 			request.reject(err);

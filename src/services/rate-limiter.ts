@@ -3,7 +3,7 @@
  *
  * Prevents exceeding API rate limits by queuing requests when
  * the bucket is empty and processing them as tokens refill.
- * Supports per-user and global rate limiting.
+ * Tracks per-user request counts for monitoring.
  */
 
 interface RateLimitConfig {
@@ -24,11 +24,11 @@ interface PendingRequest<T> {
 }
 
 /**
- * Token-bucket rate limiter with per-user fairness.
+ * Token-bucket rate limiter with FIFO request scheduling.
  *
  * Each bucket holds a configurable number of tokens that refill
  * at a steady rate. When a request arrives and tokens are available,
- * it executes immediately. Otherwise it queues and waits.
+ * it executes immediately. Otherwise it queues and waits in FIFO order.
  */
 export class RateLimiter {
 	private tokens: number;
