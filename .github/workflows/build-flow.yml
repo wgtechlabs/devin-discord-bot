@@ -14,7 +14,5 @@ jobs:
     with:
       ci-profile: auto
       ci-matrix-versions: '["22","24","26"]'
-      enable-codeql: false
-      enable-gitleaks: false
+      codeql-build-mode: none
       enable-package: false
-      enable-container: false
