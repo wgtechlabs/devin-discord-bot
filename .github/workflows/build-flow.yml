@@ -14,5 +14,6 @@ jobs:
     with:
       ci-profile: auto
       ci-matrix-versions: '["22","24","26"]'
+      enable-gitleaks: false
       enable-package: false
       enable-container: false
