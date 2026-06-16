@@ -16,3 +16,5 @@ jobs:
       ci-matrix-versions: '["22","24","26"]'
       codeql-build-mode: none
       enable-package: false
+      enable-container: true
+      container-registry: docker-hub
