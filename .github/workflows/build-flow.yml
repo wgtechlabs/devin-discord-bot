@@ -13,11 +13,7 @@ concurrency:
 
 jobs:
   build-flow:
-    permissions:
-      contents: read
-      packages: write
-      security-events: write
-    uses: wgtechlabs/build-flow-action/.github/workflows/app.yml@4968a4d2d5fc123b30fdaf3e1dbe69a7539d42a0
+    uses: wgtechlabs/build-flow-action/.github/workflows/app.yml@v0
     secrets: inherit
     with:
       ci-profile: auto
