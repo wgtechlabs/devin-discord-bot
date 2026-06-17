@@ -7,9 +7,17 @@ on:
     branches: [dev, main]
   workflow_dispatch:
 
+concurrency:
+  group: build-flow-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-flow:
-    uses: wgtechlabs/build-flow-action/.github/workflows/app.yml@v0
+    permissions:
+      contents: read
+      packages: write
+      security-events: write
+    uses: wgtechlabs/build-flow-action/.github/workflows/app.yml@4968a4d2d5fc123b30fdaf3e1dbe69a7539d42a0
     secrets: inherit
     with:
       ci-profile: auto
@@ -17,4 +25,4 @@ jobs:
       codeql-build-mode: none
       enable-package: false
       enable-container: true
-      container-registry: docker-hub
+      container-registry: both
