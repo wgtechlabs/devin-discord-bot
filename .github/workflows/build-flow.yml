@@ -13,10 +13,6 @@ concurrency:
 
 jobs:
   build-flow:
-    permissions:
-      contents: read
-      packages: write
-      security-events: write
     uses: wgtechlabs/build-flow-action/.github/workflows/app.yml@v0
     secrets: inherit
     with:
