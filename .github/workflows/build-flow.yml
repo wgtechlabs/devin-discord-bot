@@ -17,4 +17,4 @@ jobs:
       codeql-build-mode: none
       enable-package: false
       enable-container: true
-      container-registry: docker-hub
+      container-registry: both
