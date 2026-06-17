@@ -196,6 +196,27 @@ bun run test:watch
 bun run build
 ```
 
+## Container Publishing
+
+Production CI publishes container images to both Docker Hub and GitHub Container
+Registry (GHCR) through [build-flow.yml](.github/workflows/build-flow.yml).
+
+Required repository secrets:
+
+- `DOCKERHUB_USERNAME`
+- `DOCKERHUB_TOKEN` (recommended: Docker Hub access token)
+
+Required repository permissions:
+
+- Actions: Read and write
+- Packages: Read and write
+
+Notes:
+
+- GHCR publishing uses the workflow token and repository package permissions.
+- Docker Hub publishing uses the configured Docker Hub secrets.
+- Pull requests run validation, while pushes to `dev` and `main` can publish images.
+
 ## Workflow
 
 This project follows [Clean Flow](https://github.com/wgtechlabs/clean-flow), [Clean Commit](https://github.com/nicedoc/clean-commit), and [Clean Labels](https://github.com/wgtechlabs/clean-labels) conventions.
