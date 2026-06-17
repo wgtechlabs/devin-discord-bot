@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # =============================================================================
 # DEVIN DISCORD BOT - DOCKERFILE
 # =============================================================================
@@ -14,8 +15,6 @@
 #   docker build -t devin-discord-bot .
 #   docker run --env-file .env devin-discord-bot
 # =============================================================================
-
-# syntax=docker/dockerfile:1
 
 # Use Node.js 26 Alpine image with security patches
 ARG NODE_VERSION=26-alpine3.22
