@@ -5,6 +5,8 @@ on:
     branches: [dev, main]
   push:
     branches: [dev, main]
+  release:
+    types: [published]
   workflow_dispatch:
 
 concurrency:
@@ -13,7 +15,7 @@ concurrency:
 
 jobs:
   build-flow:
-    uses: wgtechlabs/build-flow-action/.github/workflows/app.yml@8172bda0cd19bf31207968da4671a9a52986d004 # v0.1.7
+    uses: wgtechlabs/build-flow-action/.github/workflows/app.yml@v0.1.8
     secrets: inherit
     with:
       ci-profile: auto
