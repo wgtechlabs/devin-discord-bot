@@ -7,21 +7,13 @@ on:
     branches: [dev, main]
   workflow_dispatch:
 
-permissions:
-  actions: read
-  contents: write
-  packages: write
-  security-events: write
-  issues: write
-  pull-requests: write
-
 concurrency:
   group: build-flow-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   build-flow:
-    uses: wgtechlabs/build-flow-action/.github/workflows/app.yml@e8c0dd4ee869c86b9a73415ec959e898dd1def0f # fix/container-pr-comment-toggle
+    uses: wgtechlabs/build-flow-action/.github/workflows/app.yml@0ef0e1f7f4f736ac0fc37c5670af6e08b71114c9 # fix/container-pr-comment-toggle
     secrets: inherit
     with:
       ci-profile: auto
@@ -30,4 +22,3 @@ jobs:
       enable-package: false
       enable-container: true
       container-registry: both
-      container-pr-comment-enabled: false
