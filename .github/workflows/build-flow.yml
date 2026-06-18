@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   build-flow:
-    uses: wgtechlabs/build-flow-action/.github/workflows/app.yml@0ef0e1f7f4f736ac0fc37c5670af6e08b71114c9 # fix/container-pr-comment-toggle
+    uses: wgtechlabs/build-flow-action/.github/workflows/app.yml@8172bda0cd19bf31207968da4671a9a52986d004 # v0.1.7
     secrets: inherit
     with:
       ci-profile: auto
