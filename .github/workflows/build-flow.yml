@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   build-flow:
-    uses: wgtechlabs/build-flow-action/.github/workflows/app.yml@main
+    uses: wgtechlabs/build-flow-action/.github/workflows/app.yml@8172bda0cd19bf31207968da4671a9a52986d004 # v0.1.7
     secrets: inherit
     with:
       ci-profile: auto
