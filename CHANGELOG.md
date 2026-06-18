@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Add caller permissions so release builds publish latest container tags
 
 ## [0.1.1] - 2026-06-18
 
@@ -33,4 +34,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - promote dev to main (#5)
 - restructure slash commands as subcommands and add bot name customization (#2)
 - initialize repository
-

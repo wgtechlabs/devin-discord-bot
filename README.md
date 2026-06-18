@@ -203,8 +203,8 @@ Registry (GHCR) through [build-flow.yml](.github/workflows/build-flow.yml).
 
 Required repository secrets:
 
-- `DOCKERHUB_USERNAME`
-- `DOCKERHUB_TOKEN` (recommended: Docker Hub access token)
+- `DOCKER_HUB_USERNAME`
+- `DOCKER_HUB_ACCESS_TOKEN` (recommended: Docker Hub access token)
 
 Required repository permissions:
 
@@ -216,6 +216,7 @@ Notes:
 - GHCR publishing uses the workflow token and repository package permissions.
 - Docker Hub publishing uses the configured Docker Hub secrets.
 - Pull requests run validation, while pushes to `dev` and `main` can publish images.
+- Published release builds also get a mutable `latest` tag in both registries.
 
 ## Workflow
 
