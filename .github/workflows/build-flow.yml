@@ -22,3 +22,4 @@ jobs:
       enable-package: false
       enable-container: true
       container-registry: both
+      publish-pr-artifacts: false
