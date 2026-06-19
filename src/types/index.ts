@@ -22,6 +22,8 @@ export interface BotConfig {
 	discordBotToken: string;
 	/** Discord application client ID for command registration */
 	discordClientId: string;
+	/** PostgreSQL connection string for persistent session state */
+	databaseUrl: string;
 	/** Devin API key for session management */
 	devinApiKey: string;
 	/** Devin organization ID for v3 service-user API keys (cog_*) */
@@ -113,6 +115,8 @@ export interface TrackedSession {
 	lastStatus: DevinSessionStatus;
 	/** Number of messages already posted to the thread */
 	lastMessageCount: number;
+	/** Last known blocked/failure reason for non-routable state */
+	statusReason?: string;
 	/** Whether thread-to-Devin message forwarding is muted */
 	muted: boolean;
 	/** Polling interval timer reference */

@@ -131,7 +131,7 @@ async function handleThreadMessage(
 			await message.react("\uD83D\uDEAB");
 			return;
 		}
-		sessionManager.setMuted(sessionId, true);
+		await sessionManager.setMuted(sessionId, true);
 		await message.react("\uD83D\uDD07");
 		return;
 	}
@@ -141,7 +141,7 @@ async function handleThreadMessage(
 			await message.react("\uD83D\uDEAB");
 			return;
 		}
-		sessionManager.setMuted(sessionId, false);
+		await sessionManager.setMuted(sessionId, false);
 		await message.react("\uD83D\uDD0A");
 		return;
 	}

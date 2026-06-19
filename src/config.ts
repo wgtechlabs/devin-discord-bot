@@ -65,6 +65,7 @@ export function loadConfig(): BotConfig {
 
 	const discordBotToken = process.env.DISCORD_BOT_TOKEN;
 	const discordClientId = process.env.DISCORD_CLIENT_ID;
+	const databaseUrl = process.env.DATABASE_URL;
 	const devinApiKey = process.env.DEVIN_API_KEY;
 	const devinOrgId = process.env.DEVIN_ORG_ID?.trim();
 	const rawLogLevel = process.env.LOG_LEVEL ?? "info";
@@ -72,6 +73,7 @@ export function loadConfig(): BotConfig {
 
 	if (!discordBotToken) missing.push("DISCORD_BOT_TOKEN");
 	if (!discordClientId) missing.push("DISCORD_CLIENT_ID");
+	if (!databaseUrl) missing.push("DATABASE_URL");
 	if (!devinApiKey) missing.push("DEVIN_API_KEY");
 	if (devinApiKey?.startsWith("cog_") && !devinOrgId) missing.push("DEVIN_ORG_ID");
 
@@ -86,6 +88,7 @@ export function loadConfig(): BotConfig {
 	return {
 		discordBotToken: discordBotToken as string,
 		discordClientId: discordClientId as string,
+		databaseUrl: databaseUrl as string,
 		devinApiKey: devinApiKey as string,
 		devinOrgId: devinOrgId || undefined,
 		logLevel,

@@ -7,6 +7,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue.svg)](https://www.typescriptlang.org/)
 [![discord.js](https://img.shields.io/badge/discord.js-v14-5865F2.svg)](https://discord.js.org/)
 [![Bun](https://img.shields.io/badge/Bun-Runtime-f472b6.svg)](https://bun.sh/)
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/xBGnRD?referralCode=KN9JqT&utm_medium=integration&utm_source=template&utm_campaign=generic)
 
 ---
 
@@ -34,6 +35,7 @@ A self-hosted Discord bot that integrates with the [Devin AI](https://devin.ai) 
 - **File Attachments** — Upload files directly to Devin via Discord
 - **Thread Keywords** — `mute`, `unmute`, `!aside`, `EXIT` for in-thread control
 - **Status Embeds** — Color-coded session status with emoji indicators
+- **Restart Recovery** — Session ownership and thread mapping persist across bot restarts
 - **Customizable Bot Name** — Set `BOT_NAME` in `.env` to rebrand embed headers and thread names
 - **Self-Hosted** — Full control over your data and deployment
 
@@ -57,6 +59,7 @@ A self-hosted Discord bot that integrates with the [Devin AI](https://devin.ai) 
   - Enable the **Message Content** privileged gateway intent
   - Invite with permissions: Send Messages, Send Messages in Threads, Create Public Threads, Embed Links, Read Message History, Add Reactions, Use Slash Commands
 - A **Devin API key** (starts with `apk_`)
+- **PostgreSQL** 14+ (for persistent session state)
 
 ## Quick Start
 
@@ -79,6 +82,7 @@ Edit `.env` with your credentials:
 ```env
 DISCORD_BOT_TOKEN=your_bot_token
 DISCORD_CLIENT_ID=your_client_id
+DATABASE_URL=postgres://postgres:postgres@localhost:5432/devin_discord_bot
 DEVIN_API_KEY=apk_your_api_key
 # Required when DEVIN_API_KEY starts with cog_ (service-user v3 keys)
 # DEVIN_ORG_ID=org_your_org_id
@@ -97,6 +101,11 @@ bun run dev
 bun run build
 bun run start
 ```
+
+### Deploy with Railway
+
+Use the **Deploy on Railway** button above for one-click hosting.
+Deploying via this template directly supports the author and ongoing project maintenance.
 
 ## Usage
 
@@ -171,7 +180,7 @@ src/
     └── index.ts              # Shared type definitions
 ```
 
-Single-process, in-memory state. No database required.
+Runtime state is in-memory; restart recovery snapshots are stored in PostgreSQL via `DATABASE_URL`.
 
 ## Development
 
