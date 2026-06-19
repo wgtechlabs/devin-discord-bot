@@ -219,7 +219,8 @@ Notes:
 - GHCR publishing uses the workflow token and repository package permissions.
 - Docker Hub publishing uses the configured Docker Hub secrets.
 - Pull requests run validation, while pushes to `dev` and `main` can publish images.
-- Published release builds also get a mutable `latest` tag in both registries.
+- Pushes to `main` also update the mutable `latest` tag in both registries.
+- Published release builds continue to publish versioned release tags.
 
 ## Workflow
 
