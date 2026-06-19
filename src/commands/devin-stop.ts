@@ -50,7 +50,7 @@ export async function handleDevinStop(
 	await interaction.deferReply({ ephemeral: true });
 
 	try {
-		await terminateSession(config.devinApiKey, sessionId);
+		await terminateSession(config.devinApiKey, sessionId, config.devinOrgId);
 		await sessionManager.userStop(sessionId);
 		await interaction.editReply("Session terminated.");
 	} catch (err) {

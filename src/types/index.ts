@@ -24,6 +24,8 @@ export interface BotConfig {
 	discordClientId: string;
 	/** Devin API key for session management */
 	devinApiKey: string;
+	/** Devin organization ID for v3 service-user API keys (cog_*) */
+	devinOrgId?: string;
 	/** Current log level threshold */
 	logLevel: LogLevel;
 	/** Customizable bot display name used in embeds and thread names */

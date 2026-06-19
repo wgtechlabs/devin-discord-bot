@@ -27,6 +27,7 @@ describe("loadConfig", () => {
 		expect(config.discordBotToken).toBe("test-token");
 		expect(config.discordClientId).toBe("test-client-id");
 		expect(config.devinApiKey).toBe("apk_test-key");
+		expect(config.devinOrgId).toBeUndefined();
 		expect(config.logLevel).toBe("error");
 	});
 
@@ -99,6 +100,31 @@ describe("loadConfig", () => {
 		expect(config.logLevel).toBe("info");
 
 		process.env.LOG_LEVEL = original;
+	});
+
+	test("uses DEVIN_ORG_ID when provided", () => {
+		const originalApiKey = process.env.DEVIN_API_KEY;
+		const originalOrgId = process.env.DEVIN_ORG_ID;
+		process.env.DEVIN_API_KEY = "cog_test-key";
+		process.env.DEVIN_ORG_ID = "org-test";
+
+		const config = loadConfig();
+		expect(config.devinApiKey).toBe("cog_test-key");
+		expect(config.devinOrgId).toBe("org-test");
+
+		if (originalApiKey === undefined) {
+			// biome-ignore lint/performance/noDelete: Restore env var to unset state.
+			delete process.env.DEVIN_API_KEY;
+		} else {
+			process.env.DEVIN_API_KEY = originalApiKey;
+		}
+
+		if (originalOrgId === undefined) {
+			// biome-ignore lint/performance/noDelete: Restore env var to unset state.
+			delete process.env.DEVIN_ORG_ID;
+		} else {
+			process.env.DEVIN_ORG_ID = originalOrgId;
+		}
 	});
 });
 

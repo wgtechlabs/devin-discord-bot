@@ -44,14 +44,18 @@ function stripMention(content: string, clientId: string): string {
  * @param message - Discord message with attachments
  * @returns Concatenated ATTACHMENT:"url" lines
  */
-async function processMessageAttachments(apiKey: string, message: Message): Promise<string> {
+async function processMessageAttachments(
+	apiKey: string,
+	message: Message,
+	orgId?: string,
+): Promise<string> {
 	let lines = "";
 	for (const attachment of message.attachments.values()) {
 		try {
 			const fileRes = await fetch(attachment.url);
 			if (!fileRes.ok) throw new Error(`HTTP ${fileRes.status}`);
 			const buffer = Buffer.from(await fileRes.arrayBuffer());
-			const fileUrl = await uploadAttachment(apiKey, attachment.name, buffer);
+			const fileUrl = await uploadAttachment(apiKey, attachment.name, buffer, orgId);
 			lines += `\nATTACHMENT:"${fileUrl}"`;
 		} catch (err) {
 			log.error(`Attachment download failed: ${attachment.name}`, err);
@@ -113,7 +117,7 @@ async function handleThreadMessage(
 			return;
 		}
 		try {
-			await terminateSession(config.devinApiKey, sessionId);
+			await terminateSession(config.devinApiKey, sessionId, config.devinOrgId);
 		} catch (err) {
 			log.error("Failed to terminate session:", err);
 		}
@@ -156,10 +160,14 @@ async function handleThreadMessage(
 
 	if (!content && message.attachments.size === 0) return;
 
-	const attachmentLines = await processMessageAttachments(config.devinApiKey, message);
+	const attachmentLines = await processMessageAttachments(
+		config.devinApiKey,
+		message,
+		config.devinOrgId,
+	);
 	const fullMessage = (content || "") + attachmentLines;
 
-	await sendMessage(config.devinApiKey, sessionId, fullMessage);
+	await sendMessage(config.devinApiKey, sessionId, fullMessage, config.devinOrgId);
 	await message.react("\u2709\uFE0F");
 }
 
@@ -187,7 +195,11 @@ async function handleMention(
 
 	await message.react("\uD83D\uDC40");
 
-	const attachmentLines = await processMessageAttachments(config.devinApiKey, message);
+	const attachmentLines = await processMessageAttachments(
+		config.devinApiKey,
+		message,
+		config.devinOrgId,
+	);
 	const prompt = (task || "See attached files.") + attachmentLines;
 
 	const queue = sessionManager.getQueue();
@@ -198,7 +210,7 @@ async function handleMention(
 	if (queue) {
 		try {
 			const result = await queue.enqueue(message.author.id, prompt, (p) =>
-				createSession(config.devinApiKey, p),
+				createSession(config.devinApiKey, p, config.devinOrgId),
 			);
 			session_id = result.sessionId;
 			url = result.url;
@@ -210,7 +222,7 @@ async function handleMention(
 			throw err;
 		}
 	} else {
-		const result = await createSession(config.devinApiKey, prompt);
+		const result = await createSession(config.devinApiKey, prompt, config.devinOrgId);
 		session_id = result.session_id;
 		url = result.url;
 	}

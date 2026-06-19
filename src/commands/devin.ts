@@ -54,7 +54,12 @@ export async function handleDevin(
 			const fileRes = await fetch(attachment.url);
 			if (!fileRes.ok) throw new Error(`HTTP ${fileRes.status}`);
 			const buffer = Buffer.from(await fileRes.arrayBuffer());
-			const fileUrl = await uploadAttachment(config.devinApiKey, attachment.name, buffer);
+			const fileUrl = await uploadAttachment(
+				config.devinApiKey,
+				attachment.name,
+				buffer,
+				config.devinOrgId,
+			);
 			prompt += `\nATTACHMENT:"${fileUrl}"`;
 		} catch (err) {
 			log.error("Attachment upload failed:", err);
@@ -69,7 +74,7 @@ export async function handleDevin(
 	if (queue) {
 		try {
 			const result = await queue.enqueue(interaction.user.id, prompt, (p) =>
-				createSession(config.devinApiKey, p),
+				createSession(config.devinApiKey, p, config.devinOrgId),
 			);
 			session_id = result.sessionId;
 			url = result.url;
@@ -85,7 +90,7 @@ export async function handleDevin(
 			throw err;
 		}
 	} else {
-		const result = await createSession(config.devinApiKey, prompt);
+		const result = await createSession(config.devinApiKey, prompt, config.devinOrgId);
 		session_id = result.session_id;
 		url = result.url;
 	}

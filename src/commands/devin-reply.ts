@@ -57,13 +57,18 @@ export async function handleDevinReply(
 			const fileRes = await fetch(attachment.url);
 			if (!fileRes.ok) throw new Error(`HTTP ${fileRes.status}`);
 			const buffer = Buffer.from(await fileRes.arrayBuffer());
-			const fileUrl = await uploadAttachment(config.devinApiKey, attachment.name, buffer);
+			const fileUrl = await uploadAttachment(
+				config.devinApiKey,
+				attachment.name,
+				buffer,
+				config.devinOrgId,
+			);
 			message += `\nATTACHMENT:"${fileUrl}"`;
 		} catch (err) {
 			log.error("Attachment upload failed:", err);
 		}
 	}
 
-	await sendMessage(config.devinApiKey, sessionId, message);
+	await sendMessage(config.devinApiKey, sessionId, message, config.devinOrgId);
 	await interaction.editReply(`Message sent to ${config.botName}.`);
 }
