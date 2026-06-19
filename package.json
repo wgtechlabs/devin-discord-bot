@@ -1,6 +1,6 @@
 {
 	"name": "devin-discord-bot",
-	"version": "0.1.1",
+	"version": "0.1.2",
 	"description": "Self-hosted Discord bot integration for Devin AI",
 	"type": "module",
 	"main": "dist/index.js",
