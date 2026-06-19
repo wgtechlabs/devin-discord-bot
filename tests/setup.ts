@@ -8,5 +8,6 @@
 
 process.env.DISCORD_BOT_TOKEN = "test-token";
 process.env.DISCORD_CLIENT_ID = "test-client-id";
+process.env.DATABASE_URL = "postgres://postgres:postgres@localhost:5432/devin_test";
 process.env.DEVIN_API_KEY = "apk_test-key";
 process.env.LOG_LEVEL = "error";

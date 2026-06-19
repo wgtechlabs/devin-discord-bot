@@ -26,6 +26,7 @@ describe("loadConfig", () => {
 
 		expect(config.discordBotToken).toBe("test-token");
 		expect(config.discordClientId).toBe("test-client-id");
+		expect(config.databaseUrl).toContain("postgres://");
 		expect(config.devinApiKey).toBe("apk_test-key");
 		expect(config.devinOrgId).toBeUndefined();
 		expect(config.logLevel).toBe("error");

@@ -156,6 +156,19 @@ export class SessionQueue {
 	}
 
 	/**
+	 * Registers an already-active session (used for restart recovery).
+	 */
+	registerActiveSession(sessionId: string, userId: string): void {
+		if (!this.activeSessionsByUser.has(userId)) {
+			this.activeSessionsByUser.set(userId, new Set());
+		}
+		const userSet = this.activeSessionsByUser.get(userId);
+		if (userSet?.has(sessionId)) return;
+		userSet?.add(sessionId);
+		this.activeSessions++;
+	}
+
+	/**
 	 * Returns the current queue position for a user's pending request.
 	 * Returns 0 if the user has no pending requests.
 	 */
