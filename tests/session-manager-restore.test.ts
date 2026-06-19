@@ -16,11 +16,7 @@ class MockStateStore {
 
 	async save(_sessions: PersistedSessionState[]): Promise<void> {}
 
-	async markStatus(
-		sessionId: string,
-		status: DevinSessionStatus,
-		reason: string,
-	): Promise<void> {
+	async markStatus(sessionId: string, status: DevinSessionStatus, reason: string): Promise<void> {
 		this.marked.push({ sessionId, status, reason });
 	}
 }
@@ -72,13 +68,11 @@ describe("SessionManager restore", () => {
 		const manager = new SessionManager(client, store as unknown as SessionStateStore);
 
 		const registered: string[] = [];
-		manager.setQueue(
-			{
-				registerActiveSession: (sessionId: string) => {
-					registered.push(sessionId);
-				},
-			} as unknown as SessionQueue,
-		);
+		manager.setQueue({
+			registerActiveSession: (sessionId: string) => {
+				registered.push(sessionId);
+			},
+		} as unknown as SessionQueue);
 
 		await manager.restoreFromState();
 

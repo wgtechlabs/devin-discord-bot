@@ -144,9 +144,10 @@ export class SessionStateStore {
 				]);
 			}
 			if (sessions.length > 0) {
-				await this.client.query("DELETE FROM tracked_sessions WHERE session_id <> ALL($1::text[])", [
-					sessions.map((session) => session.sessionId),
-				]);
+				await this.client.query(
+					"DELETE FROM tracked_sessions WHERE session_id <> ALL($1::text[])",
+					[sessions.map((session) => session.sessionId)],
+				);
 			} else {
 				await this.client.query("DELETE FROM tracked_sessions");
 			}
@@ -211,11 +212,16 @@ export class SessionStateStore {
 			lastMessageCount,
 			muted: Boolean(row.muted),
 			createdAt,
-			statusReason: row.status_reason === null ? undefined : (row.status_reason as string | undefined),
+			statusReason:
+				row.status_reason === null ? undefined : (row.status_reason as string | undefined),
 			originalMessageId:
-				row.original_message_id === null ? undefined : (row.original_message_id as string | undefined),
+				row.original_message_id === null
+					? undefined
+					: (row.original_message_id as string | undefined),
 			originalChannelId:
-				row.original_channel_id === null ? undefined : (row.original_channel_id as string | undefined),
+				row.original_channel_id === null
+					? undefined
+					: (row.original_channel_id as string | undefined),
 		};
 	}
 }

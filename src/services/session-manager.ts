@@ -25,7 +25,7 @@ import { TERMINAL_STATUSES } from "../types/index.js";
 import { getSessionState } from "./devin-api.js";
 import { createLogger } from "./logger.js";
 import type { SessionQueue } from "./session-queue.js";
-import { SessionStateStore } from "./state-store.js";
+import type { SessionStateStore } from "./state-store.js";
 
 const log = createLogger("SessionManager");
 
@@ -103,9 +103,7 @@ export class SessionManager {
 			try {
 				const channel = await this.client.channels.fetch(saved.threadId);
 				if (!channel || !channel.isThread()) {
-					log.warn(
-						`Restore orphaned session ${saved.sessionId}: missing thread ${saved.threadId}`,
-					);
+					log.warn(`Restore orphaned session ${saved.sessionId}: missing thread ${saved.threadId}`);
 					await this.stateStore.markStatus(saved.sessionId, "expired", "thread-missing");
 					continue;
 				}
@@ -129,8 +127,7 @@ export class SessionManager {
 				this.threadToSession.set(channel.id, saved.sessionId);
 
 				const permissionBlocked =
-					saved.lastStatus === "blocked" &&
-					saved.statusReason === "permission-denied";
+					saved.lastStatus === "blocked" && saved.statusReason === "permission-denied";
 				if (!TERMINAL_STATUSES.has(saved.lastStatus) && !permissionBlocked) {
 					this.queue?.registerActiveSession(saved.sessionId, saved.userId);
 					this.startPolling(saved.sessionId);
@@ -141,11 +138,7 @@ export class SessionManager {
 						`Restore blocked session ${saved.sessionId}: permission error for thread ${saved.threadId}`,
 						error,
 					);
-					await this.stateStore.markStatus(
-						saved.sessionId,
-						"blocked",
-						"permission-denied",
-					);
+					await this.stateStore.markStatus(saved.sessionId, "blocked", "permission-denied");
 					continue;
 				}
 				throw error;
@@ -310,8 +303,7 @@ export class SessionManager {
 
 		const scheduleNext = () => {
 			const permissionBlocked =
-				session.lastStatus === "blocked" &&
-				session.statusReason === "permission-denied";
+				session.lastStatus === "blocked" && session.statusReason === "permission-denied";
 			if (TERMINAL_STATUSES.has(session.lastStatus) || permissionBlocked) return;
 			session.pollTimer = setTimeout(async () => {
 				await poll();
