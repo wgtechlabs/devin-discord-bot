@@ -208,8 +208,11 @@ Required repository secrets:
 
 Required repository permissions:
 
-- Actions: Read and write
+- Contents: Read and write
 - Packages: Read and write
+- Pull requests: Read and write
+- Security events: Read and write
+- Actions: Read
 
 Notes:
 
