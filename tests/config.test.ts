@@ -126,6 +126,42 @@ describe("loadConfig", () => {
 			process.env.DEVIN_ORG_ID = originalOrgId;
 		}
 	});
+
+	test("requires DEVIN_ORG_ID for cog_ keys", () => {
+		const originalApiKey = process.env.DEVIN_API_KEY;
+		const originalOrgId = process.env.DEVIN_ORG_ID;
+		const originalExit = process.exit;
+		const originalConsoleError = console.error;
+
+		try {
+			process.env.DEVIN_API_KEY = "cog_test-key";
+			// biome-ignore lint/performance/noDelete: Test requires unsetting env var.
+			delete process.env.DEVIN_ORG_ID;
+
+			process.exit = ((code?: number) => {
+				throw new Error(`process.exit:${code ?? "undefined"}`);
+			}) as typeof process.exit;
+			console.error = (() => {}) as typeof console.error;
+
+			expect(() => loadConfig()).toThrow("process.exit:1");
+		} finally {
+			process.exit = originalExit;
+			console.error = originalConsoleError;
+			if (originalApiKey === undefined) {
+				// biome-ignore lint/performance/noDelete: Restore env var to unset state.
+				delete process.env.DEVIN_API_KEY;
+			} else {
+				process.env.DEVIN_API_KEY = originalApiKey;
+			}
+
+			if (originalOrgId === undefined) {
+				// biome-ignore lint/performance/noDelete: Restore env var to unset state.
+				delete process.env.DEVIN_ORG_ID;
+			} else {
+				process.env.DEVIN_ORG_ID = originalOrgId;
+			}
+		}
+	});
 });
 
 describe("config constants", () => {

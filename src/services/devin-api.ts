@@ -49,7 +49,7 @@ function resolveBaseUrl(apiKey: string, orgId?: string): string {
 		);
 	}
 
-	return `${DEVIN_API_V3_BASE_URL}/organizations/${orgId}`;
+	return `${DEVIN_API_V3_BASE_URL}/organizations/${encodeURIComponent(orgId)}`;
 }
 
 function toDevinId(sessionId: string): string {
@@ -217,6 +217,11 @@ export async function getSessionState(
 
 		hasNextPage = Boolean(messagesPage.has_next_page);
 		afterCursor = messagesPage.end_cursor ?? undefined;
+		if (hasNextPage && !afterCursor) {
+			throw new Error(
+				"Failed to paginate session messages: API returned has_next_page=true without end_cursor.",
+			);
+		}
 	}
 
 	return {
