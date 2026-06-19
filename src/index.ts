@@ -17,6 +17,7 @@ import { createLogger, setLogLevel } from "./services/logger.js";
 import { DEFAULT_RATE_LIMIT_CONFIG, RateLimiter } from "./services/rate-limiter.js";
 import { SessionManager } from "./services/session-manager.js";
 import { SessionQueue } from "./services/session-queue.js";
+import { SessionStateStore } from "./services/state-store.js";
 
 const log = createLogger("Bot");
 
@@ -38,7 +39,8 @@ const rateLimiter = new RateLimiter(DEFAULT_RATE_LIMIT_CONFIG);
 const sessionQueue = new SessionQueue({}, rateLimiter);
 
 /** Initialize session manager and inject config */
-const sessionManager = new SessionManager(client);
+const stateStore = new SessionStateStore(config.databaseUrl);
+const sessionManager = new SessionManager(client, stateStore);
 sessionManager.setConfig(config);
 sessionManager.setQueue(sessionQueue);
 
@@ -53,6 +55,13 @@ client.once("ready", async () => {
 			body: commands.map((c) => c.toJSON()),
 		});
 		log.info(`Commands registered in "${guild.name}"`);
+	}
+
+	try {
+		await sessionManager.restoreFromState();
+	} catch (error) {
+		log.error("Failed to restore session state from PostgreSQL:", error);
+		process.exit(1);
 	}
 });
 

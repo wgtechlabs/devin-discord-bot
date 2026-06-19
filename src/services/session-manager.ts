@@ -25,6 +25,7 @@ import { TERMINAL_STATUSES } from "../types/index.js";
 import { getSessionState } from "./devin-api.js";
 import { createLogger } from "./logger.js";
 import type { SessionQueue } from "./session-queue.js";
+import { SessionStateStore } from "./state-store.js";
 
 const log = createLogger("SessionManager");
 
@@ -64,9 +65,12 @@ export class SessionManager {
 	private config: BotConfig | null = null;
 	/** Session queue for concurrency control */
 	private queue: SessionQueue | null = null;
+	/** Local state store for restart recovery snapshots */
+	private readonly stateStore: SessionStateStore;
 
-	constructor(client: Client) {
+	constructor(client: Client, stateStore: SessionStateStore) {
 		this.client = client;
+		this.stateStore = stateStore;
 	}
 
 	/**
@@ -86,6 +90,69 @@ export class SessionManager {
 	 */
 	setQueue(queue: SessionQueue): void {
 		this.queue = queue;
+	}
+
+	/**
+	 * Restores tracked sessions from persisted state and resumes polling.
+	 */
+	async restoreFromState(): Promise<void> {
+		const persisted = await this.stateStore.load();
+		if (persisted.length === 0) return;
+
+		for (const saved of persisted) {
+			try {
+				const channel = await this.client.channels.fetch(saved.threadId);
+				if (!channel || !channel.isThread()) {
+					log.warn(
+						`Restore orphaned session ${saved.sessionId}: missing thread ${saved.threadId}`,
+					);
+					await this.stateStore.markStatus(saved.sessionId, "expired", "thread-missing");
+					continue;
+				}
+
+				const session: TrackedSession = {
+					sessionId: saved.sessionId,
+					thread: channel,
+					url: saved.url,
+					userId: saved.userId,
+					lastStatus: saved.lastStatus,
+					lastMessageCount: saved.lastMessageCount,
+					statusReason: saved.statusReason,
+					muted: saved.muted,
+					pollTimer: null,
+					createdAt: saved.createdAt,
+					originalMessageId: saved.originalMessageId,
+					originalChannelId: saved.originalChannelId,
+				};
+
+				this.sessions.set(saved.sessionId, session);
+				this.threadToSession.set(channel.id, saved.sessionId);
+
+				const permissionBlocked =
+					saved.lastStatus === "blocked" &&
+					saved.statusReason === "permission-denied";
+				if (!TERMINAL_STATUSES.has(saved.lastStatus) && !permissionBlocked) {
+					this.queue?.registerActiveSession(saved.sessionId, saved.userId);
+					this.startPolling(saved.sessionId);
+				}
+			} catch (error) {
+				if (this.isPermissionError(error)) {
+					log.error(
+						`Restore blocked session ${saved.sessionId}: permission error for thread ${saved.threadId}`,
+						error,
+					);
+					await this.stateStore.markStatus(
+						saved.sessionId,
+						"blocked",
+						"permission-denied",
+					);
+					continue;
+				}
+				throw error;
+			}
+		}
+
+		await this.persistState();
 	}
 
 	/**
@@ -128,6 +195,8 @@ export class SessionManager {
 		this.sessions.set(sessionId, session);
 		this.threadToSession.set(thread.id, sessionId);
 		this.startPolling(sessionId);
+		this.queue?.registerActiveSession(sessionId, userId);
+		await this.persistState();
 
 		log.info(`Tracking session ${sessionId} in thread ${thread.id}`);
 	}
@@ -158,9 +227,11 @@ export class SessionManager {
 	 * @param sessionId - Target session identifier
 	 * @param muted - Whether to mute (true) or unmute (false)
 	 */
-	setMuted(sessionId: string, muted: boolean): void {
+	async setMuted(sessionId: string, muted: boolean): Promise<void> {
 		const session = this.sessions.get(sessionId);
-		if (session) session.muted = muted;
+		if (!session) return;
+		session.muted = muted;
+		await this.persistState();
 	}
 
 	/**
@@ -192,6 +263,8 @@ export class SessionManager {
 
 		this.stopPolling(sessionId);
 		session.lastStatus = "stopped";
+		session.statusReason = undefined;
+		await this.persistState();
 
 		const embed = new EmbedBuilder()
 			.setTitle("Session Stopped")
@@ -200,12 +273,15 @@ export class SessionManager {
 			.setTimestamp()
 			.setFooter({ text: getEmbedFooterText(this.config?.botName ?? "Devin") });
 
-		await session.thread.send({ embeds: [embed] }).catch((err: Error) => {
-			log.error("Failed to send stop embed:", err.message);
-		});
+		try {
+			await session.thread.send({ embeds: [embed] });
+		} catch (error) {
+			await this.handlePermissionLoss(sessionId, session, "send stop embed", error);
+		}
 
 		await this.updateOriginalReaction(session, "stop");
 		this.queue?.releaseSession(sessionId, session.userId);
+		await this.persistState();
 	}
 
 	/**
@@ -233,7 +309,10 @@ export class SessionManager {
 		};
 
 		const scheduleNext = () => {
-			if (TERMINAL_STATUSES.has(session.lastStatus)) return;
+			const permissionBlocked =
+				session.lastStatus === "blocked" &&
+				session.statusReason === "permission-denied";
+			if (TERMINAL_STATUSES.has(session.lastStatus) || permissionBlocked) return;
 			session.pollTimer = setTimeout(async () => {
 				await poll();
 				scheduleNext();
@@ -269,6 +348,9 @@ export class SessionManager {
 			}
 		}
 		session.lastMessageCount = state.messages.length;
+		if (newMessages.length > 0) {
+			await this.persistState();
+		}
 
 		if (state.pull_requests?.length) {
 			for (const pr of state.pull_requests) {
@@ -278,12 +360,15 @@ export class SessionManager {
 
 		if (state.status !== session.lastStatus) {
 			session.lastStatus = state.status;
+			session.statusReason = undefined;
+			await this.persistState();
 
 			if (TERMINAL_STATUSES.has(state.status)) {
 				this.stopPolling(sessionId);
 				await this.postStatusChange(session, state.status);
 				await this.updateOriginalReaction(session, state.status);
 				this.queue?.releaseSession(sessionId, session.userId);
+				await this.persistState();
 			}
 		}
 	}
@@ -300,9 +385,11 @@ export class SessionManager {
 			.setTimestamp()
 			.setFooter({ text: getEmbedFooterText(this.config?.botName ?? "Devin") });
 
-		await session.thread.send({ embeds: [embed] }).catch((err: Error) => {
-			log.error("Failed to post Devin message:", err.message);
-		});
+		try {
+			await session.thread.send({ embeds: [embed] });
+		} catch (error) {
+			await this.handlePermissionLoss(session.sessionId, session, "post Devin message", error);
+		}
 	}
 
 	/**
@@ -317,9 +404,11 @@ export class SessionManager {
 			.setTimestamp()
 			.setFooter({ text: getEmbedFooterText(this.config?.botName ?? "Devin") });
 
-		await session.thread.send({ embeds: [embed] }).catch((err: Error) => {
-			log.error("Failed to post PR embed:", err.message);
-		});
+		try {
+			await session.thread.send({ embeds: [embed] });
+		} catch (error) {
+			await this.handlePermissionLoss(session.sessionId, session, "post PR embed", error);
+		}
 	}
 
 	/**
@@ -337,9 +426,11 @@ export class SessionManager {
 			.setTimestamp()
 			.setFooter({ text: getEmbedFooterText(this.config?.botName ?? "Devin") });
 
-		await session.thread.send({ embeds: [embed] }).catch((err: Error) => {
-			log.error("Failed to post status embed:", err.message);
-		});
+		try {
+			await session.thread.send({ embeds: [embed] });
+		} catch (error) {
+			await this.handlePermissionLoss(session.sessionId, session, "post status embed", error);
+		}
 	}
 
 	/**
@@ -359,5 +450,52 @@ export class SessionManager {
 		} catch (err) {
 			log.debug("Could not update original reaction:", err);
 		}
+	}
+
+	private async persistState(): Promise<void> {
+		const snapshot = Array.from(this.sessions.values()).map((session) => ({
+			sessionId: session.sessionId,
+			threadId: session.thread.id,
+			url: session.url,
+			userId: session.userId,
+			lastStatus: session.lastStatus,
+			lastMessageCount: session.lastMessageCount,
+			muted: session.muted,
+			createdAt: session.createdAt,
+			statusReason: session.statusReason,
+			originalMessageId: session.originalMessageId,
+			originalChannelId: session.originalChannelId,
+		}));
+		// ponytail: single-process last-write-wins; add write queue only if concurrent writes collide in logs
+		await this.stateStore.save(snapshot);
+	}
+
+	private isPermissionError(error: unknown): boolean {
+		const code =
+			typeof error === "object" && error !== null && "code" in error
+				? (error as { code?: unknown }).code
+				: undefined;
+		return code === 50001 || code === 50013 || code === 403;
+	}
+
+	private async handlePermissionLoss(
+		sessionId: string,
+		session: TrackedSession,
+		action: string,
+		error: unknown,
+	): Promise<void> {
+		if (!this.isPermissionError(error)) {
+			log.error(`Failed to ${action}:`, error);
+			return;
+		}
+
+		this.stopPolling(sessionId);
+		session.lastStatus = "blocked";
+		session.statusReason = "permission-denied";
+		await this.persistState();
+		log.error(
+			`Permission lost for session ${sessionId} thread ${session.thread.id} while trying to ${action}`,
+			error,
+		);
 	}
 }
