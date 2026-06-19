@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [0.1.6] - 2026-06-19
+
+### Changed
+
+- update README to include deploy button in header
+- remove unsafe pool pseudo-transaction
+- harden postgres state recovery (#20)
+
 ## [0.1.5] - 2026-06-19
 
 ### Changed
