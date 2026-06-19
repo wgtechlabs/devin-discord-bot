@@ -1,5 +1,5 @@
 
-# Devin Discord Bot
+# Devin Discord Bot [![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/xBGnRD?referralCode=KN9JqT&utm_medium=integration&utm_source=template&utm_campaign=generic)
 
 [![Devin Discord Bot – GitHub Repo Banner](https://ghrb.waren.build/banner?header=Devin+Discord+Bot+%F0%9F%A4%96&subheader=Self-hosted+Discord+bot+integration+for+Devin+AI&bg=4752C4-5865F2&color=FFFFFF)](https://github.com/wgtechlabs/devin-discord-bot)
 
@@ -7,7 +7,6 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue.svg)](https://www.typescriptlang.org/)
 [![discord.js](https://img.shields.io/badge/discord.js-v14-5865F2.svg)](https://discord.js.org/)
 [![Bun](https://img.shields.io/badge/Bun-Runtime-f472b6.svg)](https://bun.sh/)
-[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/xBGnRD?referralCode=KN9JqT&utm_medium=integration&utm_source=template&utm_campaign=generic)
 
 ---
 
