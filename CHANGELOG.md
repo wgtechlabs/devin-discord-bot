@@ -7,7 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Add caller permissions so release builds publish latest container tags
+
+## [0.1.3] - 2026-06-19
+
+### Changed
+
+- align package version with main
+- restore pr codeql trigger on main
+- avoid duplicate PR-main validation
+- align workflow permission docs
+- publish latest container tags
 
 ## [0.1.2] - 2026-06-18
 
