@@ -126,27 +126,20 @@ export class SessionStateStore {
 
 	async save(sessions: PersistedSessionState[]): Promise<void> {
 		await this.init();
-		await this.client.query("BEGIN");
-		try {
-			for (const session of sessions) {
-				await this.client.query(UPSERT_SQL, [
-					session.sessionId,
-					session.threadId,
-					session.url,
-					session.userId,
-					session.lastStatus,
-					session.lastMessageCount,
-					session.muted,
-					session.createdAt,
-					session.statusReason ?? null,
-					session.originalMessageId ?? null,
-					session.originalChannelId ?? null,
-				]);
-			}
-			await this.client.query("COMMIT");
-		} catch (error) {
-			await this.client.query("ROLLBACK");
-			throw error;
+		for (const session of sessions) {
+			await this.client.query(UPSERT_SQL, [
+				session.sessionId,
+				session.threadId,
+				session.url,
+				session.userId,
+				session.lastStatus,
+				session.lastMessageCount,
+				session.muted,
+				session.createdAt,
+				session.statusReason ?? null,
+				session.originalMessageId ?? null,
+				session.originalChannelId ?? null,
+			]);
 		}
 	}
 
