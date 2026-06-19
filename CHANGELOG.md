@@ -12,9 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- harden v3 url and pagination guards
-- fix package.json biome formatting
-- add support for service-user v3 keys with org id
+- persist session state in PostgreSQL for restart recovery
+- restore sessions on startup with thread/permission guardrails
+- validate and skip malformed persisted rows with clear logs
+- add tests for persistence roundtrip and restore decisions
+- document `DATABASE_URL` and Railway deployment option
 
 ## [0.1.4] - 2026-06-19
 

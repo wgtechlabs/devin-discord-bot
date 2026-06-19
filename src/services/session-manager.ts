@@ -67,6 +67,8 @@ export class SessionManager {
 	private queue: SessionQueue | null = null;
 	/** Local state store for restart recovery snapshots */
 	private readonly stateStore: SessionStateStore;
+	/** Serialize state writes to prevent out-of-order snapshot overwrites */
+	private persistChain: Promise<void> = Promise.resolve();
 
 	constructor(client: Client, stateStore: SessionStateStore) {
 		this.client = client;
@@ -444,24 +446,6 @@ export class SessionManager {
 		}
 	}
 
-	private async persistState(): Promise<void> {
-		const snapshot = Array.from(this.sessions.values()).map((session) => ({
-			sessionId: session.sessionId,
-			threadId: session.thread.id,
-			url: session.url,
-			userId: session.userId,
-			lastStatus: session.lastStatus,
-			lastMessageCount: session.lastMessageCount,
-			muted: session.muted,
-			createdAt: session.createdAt,
-			statusReason: session.statusReason,
-			originalMessageId: session.originalMessageId,
-			originalChannelId: session.originalChannelId,
-		}));
-		// ponytail: single-process last-write-wins; add write queue only if concurrent writes collide in logs
-		await this.stateStore.save(snapshot);
-	}
-
 	private isPermissionError(error: unknown): boolean {
 		const code =
 			typeof error === "object" && error !== null && "code" in error
@@ -484,10 +468,34 @@ export class SessionManager {
 		this.stopPolling(sessionId);
 		session.lastStatus = "blocked";
 		session.statusReason = "permission-denied";
+		this.queue?.releaseSession(sessionId, session.userId);
 		await this.persistState();
 		log.error(
 			`Permission lost for session ${sessionId} thread ${session.thread.id} while trying to ${action}`,
 			error,
 		);
+	}
+
+	private async persistState(): Promise<void> {
+		const snapshot = Array.from(this.sessions.values()).map((session) => ({
+			sessionId: session.sessionId,
+			threadId: session.thread.id,
+			url: session.url,
+			userId: session.userId,
+			lastStatus: session.lastStatus,
+			lastMessageCount: session.lastMessageCount,
+			muted: session.muted,
+			createdAt: session.createdAt,
+			statusReason: session.statusReason,
+			originalMessageId: session.originalMessageId,
+			originalChannelId: session.originalChannelId,
+		}));
+
+		const write = async () => {
+			await this.stateStore.save(snapshot);
+		};
+		const next = this.persistChain.then(write, write);
+		this.persistChain = next.catch(() => {});
+		await next;
 	}
 }

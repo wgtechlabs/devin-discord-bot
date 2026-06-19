@@ -143,14 +143,6 @@ export class SessionStateStore {
 					session.originalChannelId ?? null,
 				]);
 			}
-			if (sessions.length > 0) {
-				await this.client.query(
-					"DELETE FROM tracked_sessions WHERE session_id <> ALL($1::text[])",
-					[sessions.map((session) => session.sessionId)],
-				);
-			} else {
-				await this.client.query("DELETE FROM tracked_sessions");
-			}
 			await this.client.query("COMMIT");
 		} catch (error) {
 			await this.client.query("ROLLBACK");
@@ -203,6 +195,28 @@ export class SessionStateStore {
 			return null;
 		}
 
+		if (typeof row.muted !== "boolean") {
+			log.warn(`Skipping invalid state row ${idForLog}: invalid muted flag`);
+			return null;
+		}
+
+		const statusReason = this.readOptionalString(row.status_reason, idForLog, "status_reason");
+		if (row.status_reason !== null && statusReason === undefined) return null;
+
+		const originalMessageId = this.readOptionalString(
+			row.original_message_id,
+			idForLog,
+			"original_message_id",
+		);
+		if (row.original_message_id !== null && originalMessageId === undefined) return null;
+
+		const originalChannelId = this.readOptionalString(
+			row.original_channel_id,
+			idForLog,
+			"original_channel_id",
+		);
+		if (row.original_channel_id !== null && originalChannelId === undefined) return null;
+
 		return {
 			sessionId: row.session_id,
 			threadId: row.thread_id,
@@ -210,18 +224,22 @@ export class SessionStateStore {
 			userId: row.user_id,
 			lastStatus: row.last_status as DevinSessionStatus,
 			lastMessageCount,
-			muted: Boolean(row.muted),
+			muted: row.muted,
 			createdAt,
-			statusReason:
-				row.status_reason === null ? undefined : (row.status_reason as string | undefined),
-			originalMessageId:
-				row.original_message_id === null
-					? undefined
-					: (row.original_message_id as string | undefined),
-			originalChannelId:
-				row.original_channel_id === null
-					? undefined
-					: (row.original_channel_id as string | undefined),
+			statusReason,
+			originalMessageId,
+			originalChannelId,
 		};
+	}
+
+	private readOptionalString(
+		value: unknown,
+		idForLog: string,
+		fieldName: string,
+	): string | undefined {
+		if (value === null || value === undefined) return undefined;
+		if (typeof value === "string") return value;
+		log.warn(`Skipping invalid state row ${idForLog}: invalid ${fieldName}`);
+		return undefined;
 	}
 }
