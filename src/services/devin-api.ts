@@ -12,6 +12,67 @@ import { createLogger } from "./logger.js";
 
 const log = createLogger("DevinAPI");
 
+const DEVIN_API_V3_BASE_URL = "https://api.devin.ai/v3";
+
+type DevinApiVersion = "v1" | "v3";
+
+interface V3SessionResponse {
+	session_id: string;
+	url: string;
+	status: "new" | "claimed" | "running" | "exit" | "error" | "suspended" | "resuming";
+	status_detail?: string | null;
+	pull_requests?: Array<{ pr_url: string; pr_state?: string | null }>;
+}
+
+interface V3MessagesResponse {
+	items: Array<{
+		event_id: string;
+		source: "devin" | "user";
+		message: string;
+		created_at: number;
+	}>;
+	has_next_page?: boolean;
+	end_cursor?: string | null;
+}
+
+function getApiVersion(apiKey: string): DevinApiVersion {
+	return apiKey.startsWith("cog_") ? "v3" : "v1";
+}
+
+function resolveBaseUrl(apiKey: string, orgId?: string): string {
+	const version = getApiVersion(apiKey);
+	if (version === "v1") return DEVIN_API_BASE_URL;
+
+	if (!orgId) {
+		throw new Error(
+			"DEVIN_ORG_ID is required when using a cog_ Devin API key. Add DEVIN_ORG_ID to your environment.",
+		);
+	}
+
+	return `${DEVIN_API_V3_BASE_URL}/organizations/${encodeURIComponent(orgId)}`;
+}
+
+function toDevinId(sessionId: string): string {
+	return sessionId.startsWith("devin-") ? sessionId : `devin-${sessionId}`;
+}
+
+function mapV3Status(status: V3SessionResponse["status"], statusDetail?: string | null) {
+	if (status === "error") return "failed";
+	if (statusDetail === "finished" || status === "exit") return "finished";
+
+	if (status === "suspended") {
+		if (statusDetail === "inactivity") return "expired";
+		if (statusDetail === "user_request") return "stopped";
+		return "blocked";
+	}
+
+	if (statusDetail === "waiting_for_user" || statusDetail === "waiting_for_approval") {
+		return "blocked";
+	}
+
+	return "running";
+}
+
 /**
  * Creates a new Devin coding session with the given prompt.
  *
@@ -23,10 +84,13 @@ const log = createLogger("DevinAPI");
 export async function createSession(
 	apiKey: string,
 	prompt: string,
+	orgId?: string,
 ): Promise<DevinCreateSessionResponse> {
 	log.info("Creating session with prompt:", prompt.slice(0, 100));
+	const baseUrl = resolveBaseUrl(apiKey, orgId);
+	const createUrl = `${baseUrl}/sessions`;
 
-	const response = await fetch(`${DEVIN_API_BASE_URL}/sessions`, {
+	const response = await fetch(createUrl, {
 		method: "POST",
 		headers: {
 			Authorization: `Bearer ${apiKey}`,
@@ -40,9 +104,12 @@ export async function createSession(
 		throw new Error(`Devin API error ${response.status}: ${body}`);
 	}
 
-	const data = (await response.json()) as DevinCreateSessionResponse;
+	const data = (await response.json()) as DevinCreateSessionResponse | V3SessionResponse;
 	log.info("Session created:", data.session_id);
-	return data;
+	return {
+		session_id: data.session_id,
+		url: data.url,
+	};
 }
 
 /**
@@ -57,10 +124,15 @@ export async function sendMessage(
 	apiKey: string,
 	sessionId: string,
 	message: string,
+	orgId?: string,
 ): Promise<void> {
 	log.debug("Sending message to session:", sessionId);
+	const version = getApiVersion(apiKey);
+	const baseUrl = resolveBaseUrl(apiKey, orgId);
+	const targetSessionId = version === "v3" ? toDevinId(sessionId) : sessionId;
+	const messagePath = version === "v3" ? "messages" : "message";
 
-	const response = await fetch(`${DEVIN_API_BASE_URL}/sessions/${sessionId}/messages`, {
+	const response = await fetch(`${baseUrl}/sessions/${targetSessionId}/${messagePath}`, {
 		method: "POST",
 		headers: {
 			Authorization: `Bearer ${apiKey}`,
@@ -87,8 +159,13 @@ export async function sendMessage(
 export async function getSessionState(
 	apiKey: string,
 	sessionId: string,
+	orgId?: string,
 ): Promise<DevinSessionState> {
-	const response = await fetch(`${DEVIN_API_BASE_URL}/sessions/${sessionId}`, {
+	const version = getApiVersion(apiKey);
+	const baseUrl = resolveBaseUrl(apiKey, orgId);
+	const targetSessionId = version === "v3" ? toDevinId(sessionId) : sessionId;
+
+	const response = await fetch(`${baseUrl}/sessions/${targetSessionId}`, {
 		headers: {
 			Authorization: `Bearer ${apiKey}`,
 		},
@@ -99,7 +176,63 @@ export async function getSessionState(
 		throw new Error(`Failed to get session: ${response.status} ${body}`);
 	}
 
-	return (await response.json()) as DevinSessionState;
+	if (version === "v1") {
+		return (await response.json()) as DevinSessionState;
+	}
+
+	const sessionData = (await response.json()) as V3SessionResponse;
+	const messages: DevinSessionState["messages"] = [];
+	let afterCursor: string | undefined;
+	let hasNextPage = true;
+
+	while (hasNextPage) {
+		const params = new URLSearchParams({ first: "200" });
+		if (afterCursor) params.set("after", afterCursor);
+
+		const messagesResponse = await fetch(
+			`${baseUrl}/sessions/${targetSessionId}/messages?${params.toString()}`,
+			{
+				headers: {
+					Authorization: `Bearer ${apiKey}`,
+				},
+			},
+		);
+
+		if (!messagesResponse.ok) {
+			const body = await messagesResponse.text();
+			throw new Error(`Failed to list session messages: ${messagesResponse.status} ${body}`);
+		}
+
+		const messagesPage = (await messagesResponse.json()) as V3MessagesResponse;
+		for (const item of messagesPage.items) {
+			const createdAtMs =
+				item.created_at > 10_000_000_000 ? item.created_at : item.created_at * 1000;
+			messages.push({
+				message_id: item.event_id,
+				role: item.source === "devin" ? "devin" : "user",
+				content: item.message,
+				created_at: new Date(createdAtMs).toISOString(),
+			});
+		}
+
+		hasNextPage = Boolean(messagesPage.has_next_page);
+		afterCursor = messagesPage.end_cursor ?? undefined;
+		if (hasNextPage && !afterCursor) {
+			throw new Error(
+				"Failed to paginate session messages: API returned has_next_page=true without end_cursor.",
+			);
+		}
+	}
+
+	return {
+		status: mapV3Status(sessionData.status, sessionData.status_detail),
+		messages,
+		pull_requests: (sessionData.pull_requests ?? []).map((pr) => ({
+			url: pr.pr_url,
+			title: pr.pr_state ? `Pull Request (${pr.pr_state})` : "Pull Request",
+			repository: "Unknown repository",
+		})),
+	};
 }
 
 /**
@@ -109,10 +242,17 @@ export async function getSessionState(
  * @param sessionId - Session identifier to stop
  * @throws Error if the API request fails
  */
-export async function terminateSession(apiKey: string, sessionId: string): Promise<void> {
+export async function terminateSession(
+	apiKey: string,
+	sessionId: string,
+	orgId?: string,
+): Promise<void> {
 	log.info("Terminating session:", sessionId);
+	const version = getApiVersion(apiKey);
+	const baseUrl = resolveBaseUrl(apiKey, orgId);
+	const targetSessionId = version === "v3" ? toDevinId(sessionId) : sessionId;
 
-	const response = await fetch(`${DEVIN_API_BASE_URL}/sessions/${sessionId}`, {
+	const response = await fetch(`${baseUrl}/sessions/${targetSessionId}`, {
 		method: "DELETE",
 		headers: {
 			Authorization: `Bearer ${apiKey}`,
@@ -138,14 +278,16 @@ export async function uploadAttachment(
 	apiKey: string,
 	fileName: string,
 	fileBuffer: Buffer,
+	orgId?: string,
 ): Promise<string> {
 	log.debug("Uploading attachment:", fileName);
+	const baseUrl = resolveBaseUrl(apiKey, orgId);
 
 	const formData = new FormData();
 	const blob = new Blob([fileBuffer]);
 	formData.append("file", blob, fileName);
 
-	const response = await fetch(`${DEVIN_API_BASE_URL}/attachments`, {
+	const response = await fetch(`${baseUrl}/attachments`, {
 		method: "POST",
 		headers: {
 			Authorization: `Bearer ${apiKey}`,

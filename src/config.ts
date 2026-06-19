@@ -66,12 +66,14 @@ export function loadConfig(): BotConfig {
 	const discordBotToken = process.env.DISCORD_BOT_TOKEN;
 	const discordClientId = process.env.DISCORD_CLIENT_ID;
 	const devinApiKey = process.env.DEVIN_API_KEY;
+	const devinOrgId = process.env.DEVIN_ORG_ID?.trim();
 	const rawLogLevel = process.env.LOG_LEVEL ?? "info";
 	const rawBotName = process.env.BOT_NAME ?? "Devin";
 
 	if (!discordBotToken) missing.push("DISCORD_BOT_TOKEN");
 	if (!discordClientId) missing.push("DISCORD_CLIENT_ID");
 	if (!devinApiKey) missing.push("DEVIN_API_KEY");
+	if (devinApiKey?.startsWith("cog_") && !devinOrgId) missing.push("DEVIN_ORG_ID");
 
 	if (missing.length > 0) {
 		console.error(`Missing required environment variables: ${missing.join(", ")}`);
@@ -85,6 +87,7 @@ export function loadConfig(): BotConfig {
 		discordBotToken: discordBotToken as string,
 		discordClientId: discordClientId as string,
 		devinApiKey: devinApiKey as string,
+		devinOrgId: devinOrgId || undefined,
 		logLevel,
 		botName,
 	};

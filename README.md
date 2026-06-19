@@ -80,6 +80,8 @@ Edit `.env` with your credentials:
 DISCORD_BOT_TOKEN=your_bot_token
 DISCORD_CLIENT_ID=your_client_id
 DEVIN_API_KEY=apk_your_api_key
+# Required when DEVIN_API_KEY starts with cog_ (service-user v3 keys)
+# DEVIN_ORG_ID=org_your_org_id
 
 # Optional — customize the bot's display name in embeds and thread names
 # BOT_NAME=Devin

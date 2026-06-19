@@ -217,9 +217,10 @@ export class SessionManager {
 		if (!session || !this.config) return;
 
 		const apiKey = this.config.devinApiKey;
+		const orgId = this.config.devinOrgId;
 		const poll = async () => {
 			try {
-				const state = await getSessionState(apiKey, sessionId);
+				const state = await getSessionState(apiKey, sessionId, orgId);
 				await this.processUpdate(sessionId, state);
 			} catch (err) {
 				log.error(`Poll error for ${sessionId}:`, err);
