@@ -368,22 +368,50 @@ export class SessionManager {
 	}
 
 	/**
-	 * Posts a Devin message as a rich embed in the session thread.
+	 * Posts a Devin message as a plain text message in the session thread.
+	 * Splits content into multiple messages if it exceeds Discord's 2000 character limit.
 	 */
 	private async postDevinMessage(session: TrackedSession, content: string): Promise<void> {
-		const truncated = content.length > 4000 ? `${content.slice(0, 3997)}...` : content;
-
-		const embed = new EmbedBuilder()
-			.setDescription(truncated)
-			.setColor(EMBED_COLORS.working)
-			.setTimestamp()
-			.setFooter({ text: getEmbedFooterText(this.config?.botName ?? "Devin") });
-
 		try {
-			await session.thread.send({ embeds: [embed] });
+			await session.thread.sendTyping();
+			const chunks = this.splitMessage(content);
+			for (const chunk of chunks) {
+				await session.thread.send(chunk);
+			}
 		} catch (error) {
 			await this.handlePermissionLoss(session.sessionId, session, "post Devin message", error);
 		}
+	}
+
+	/**
+	 * Splits a message into chunks that fit within Discord's 2000 character limit.
+	 * Splits on newline boundaries when possible to preserve formatting.
+	 */
+	private splitMessage(content: string, maxLength = 2000): string[] {
+		if (content.length <= maxLength) return [content];
+
+		const chunks: string[] = [];
+		let remaining = content;
+
+		while (remaining.length > 0) {
+			if (remaining.length <= maxLength) {
+				chunks.push(remaining);
+				break;
+			}
+
+			let splitIndex = remaining.lastIndexOf("\n", maxLength);
+			if (splitIndex <= 0) {
+				splitIndex = remaining.lastIndexOf(" ", maxLength);
+			}
+			if (splitIndex <= 0) {
+				splitIndex = maxLength;
+			}
+
+			chunks.push(remaining.slice(0, splitIndex));
+			remaining = remaining.slice(splitIndex + 1);
+		}
+
+		return chunks;
 	}
 
 	/**
