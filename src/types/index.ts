@@ -127,6 +127,8 @@ export interface TrackedSession {
 	originalMessageId?: string;
 	/** Channel ID containing the original trigger message */
 	originalChannelId?: string;
+	/** Set of PR URLs already posted to prevent duplicate notifications */
+	postedPullRequests: Set<string>;
 }
 
 /**

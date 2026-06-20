@@ -160,15 +160,27 @@ async function handleThreadMessage(
 
 	if (!content && message.attachments.size === 0) return;
 
-	const attachmentLines = await processMessageAttachments(
-		config.devinApiKey,
-		message,
-		config.devinOrgId,
-	);
-	const fullMessage = (content || "") + attachmentLines;
+	await message.react("\uD83D\uDC40");
 
-	await sendMessage(config.devinApiKey, sessionId, fullMessage, config.devinOrgId);
-	await message.react("\u2709\uFE0F");
+	try {
+		if ("sendTyping" in message.channel) {
+			await message.channel.sendTyping().catch(() => {});
+		}
+
+		const attachmentLines = await processMessageAttachments(
+			config.devinApiKey,
+			message,
+			config.devinOrgId,
+		);
+		const fullMessage = (content || "") + attachmentLines;
+
+		await sendMessage(config.devinApiKey, sessionId, fullMessage, config.devinOrgId);
+	} finally {
+		await message.reactions
+			.resolve("\uD83D\uDC40")
+			?.users.remove(client.user?.id)
+			.catch(() => {});
+	}
 }
 
 /**
