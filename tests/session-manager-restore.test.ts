@@ -60,7 +60,12 @@ describe("SessionManager restore", () => {
 			channels: {
 				fetch: async (threadId: string) => {
 					if (threadId === "t-missing") return null;
-					return { id: threadId, isThread: () => true };
+					return {
+						id: threadId,
+						isThread: () => true,
+						isDMBased: () => false,
+						sendTyping: async () => {},
+					};
 				},
 			},
 		} as unknown as Client;

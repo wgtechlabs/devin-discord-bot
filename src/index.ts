@@ -8,11 +8,12 @@
  * @see {@link https://github.com/wgtechlabs/devin-discord-bot}
  */
 
-import { Client, GatewayIntentBits, REST, Routes } from "discord.js";
+import { Client, GatewayIntentBits, Partials, REST, Routes } from "discord.js";
 import { commands } from "./commands/index.js";
 import { loadConfig } from "./config.js";
 import { createInteractionHandler } from "./handlers/interaction.js";
 import { createMessageHandler } from "./handlers/message.js";
+import { AllowlistStore } from "./services/allowlist-store.js";
 import { createLogger, setLogLevel } from "./services/logger.js";
 import { DEFAULT_RATE_LIMIT_CONFIG, RateLimiter } from "./services/rate-limiter.js";
 import { SessionManager } from "./services/session-manager.js";
@@ -31,15 +32,18 @@ const client = new Client({
 		GatewayIntentBits.Guilds,
 		GatewayIntentBits.GuildMessages,
 		GatewayIntentBits.MessageContent,
+		GatewayIntentBits.DirectMessages,
 	],
+	partials: [Partials.Channel],
 });
 
 /** Initialize rate limiter and session queue */
 const rateLimiter = new RateLimiter(DEFAULT_RATE_LIMIT_CONFIG);
 const sessionQueue = new SessionQueue({}, rateLimiter);
 
-/** Initialize session manager and inject config */
+/** Initialize session manager, allowlist store, and inject config */
 const stateStore = new SessionStateStore(config.databaseUrl);
+const allowlistStore = new AllowlistStore(config.databaseUrl);
 const sessionManager = new SessionManager(client, stateStore);
 sessionManager.setConfig(config);
 sessionManager.setQueue(sessionQueue);
@@ -66,8 +70,8 @@ client.once("ready", async () => {
 });
 
 /** Wire up event handlers */
-client.on("interactionCreate", createInteractionHandler(config, sessionManager));
-client.on("messageCreate", createMessageHandler(client, config, sessionManager));
+client.on("interactionCreate", createInteractionHandler(config, sessionManager, allowlistStore));
+client.on("messageCreate", createMessageHandler(client, config, sessionManager, allowlistStore));
 
 /** Connect to Discord */
 client.login(config.discordBotToken);
