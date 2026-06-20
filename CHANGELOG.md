@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [0.1.7] - 2026-06-20
+
+### Changed
+
+- fix splitMessage char drop and isolate sendTyping errors
+- sync package version to 0.1.6
+- replace envelope reaction with eyes + typing indicator and use plain messages (#22)
+- update readme
+
 ## [0.1.6] - 2026-06-19
 
 ### Changed
