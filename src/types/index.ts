@@ -5,7 +5,7 @@
  * the bot's services, commands, and handlers.
  */
 
-import type { TextChannel, ThreadChannel } from "discord.js";
+import type { DMChannel, TextChannel, ThreadChannel } from "discord.js";
 
 /**
  * Log levels supported by the bot's logging system.
@@ -102,11 +102,17 @@ export interface DevinSessionState {
  * Maintained by the SessionManager to correlate Discord threads
  * with Devin API sessions.
  */
+/**
+ * Channel types that support session message exchange.
+ * Threads are used for guild-based sessions; DM channels for direct messages.
+ */
+export type SessionChannel = ThreadChannel | DMChannel;
+
 export interface TrackedSession {
 	/** Devin API session identifier */
 	sessionId: string;
-	/** Discord thread where updates are posted */
-	thread: ThreadChannel;
+	/** Discord channel where updates are posted (thread or DM) */
+	thread: SessionChannel;
 	/** Web URL to view the session in Devin's dashboard */
 	url: string;
 	/** Discord user ID of the session creator */
@@ -121,6 +127,8 @@ export interface TrackedSession {
 	muted: boolean;
 	/** Polling interval timer reference */
 	pollTimer: ReturnType<typeof setInterval> | null;
+	/** Continuous typing indicator timer reference */
+	typingTimer: ReturnType<typeof setInterval> | null;
 	/** Session creation timestamp in epoch milliseconds */
 	createdAt: number;
 	/** Original message ID that triggered the session (for @mention reactions) */
