@@ -230,9 +230,26 @@ export async function getSessionState(
 		pull_requests: (sessionData.pull_requests ?? []).map((pr) => ({
 			url: pr.pr_url,
 			title: pr.pr_state ? `Pull Request (${pr.pr_state})` : "Pull Request",
-			repository: "Unknown repository",
+			repository: extractRepository(pr.pr_url),
 		})),
 	};
+}
+
+/**
+ * Extracts "owner/repo" from a pull request URL.
+ * Supports GitHub, GitLab, and similar hosts with /owner/repo/pull/N patterns.
+ */
+function extractRepository(prUrl: string): string {
+	try {
+		const url = new URL(prUrl);
+		const parts = url.pathname.split("/").filter(Boolean);
+		if (parts.length >= 2) {
+			return `${parts[0]}/${parts[1]}`;
+		}
+	} catch {
+		// invalid URL
+	}
+	return "Unknown repository";
 }
 
 /**
