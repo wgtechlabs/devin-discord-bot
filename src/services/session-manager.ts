@@ -196,6 +196,16 @@ export class SessionManager {
 			postedPullRequests: new Set(),
 		};
 
+		const existingSessionId = this.threadToSession.get(thread.id);
+		if (existingSessionId && existingSessionId !== sessionId) {
+			const oldSession = this.sessions.get(existingSessionId);
+			if (oldSession) {
+				this.stopPolling(existingSessionId);
+				this.stopTypingIndicator(existingSessionId);
+				this.sessions.delete(existingSessionId);
+			}
+		}
+
 		this.sessions.set(sessionId, session);
 		this.threadToSession.set(thread.id, sessionId);
 		this.startPolling(sessionId);

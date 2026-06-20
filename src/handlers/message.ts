@@ -440,13 +440,22 @@ async function handleDmNewSession(
 
 	const dmChannel = message.channel as DMChannel;
 
-	await sessionManager.track(session_id, dmChannel, url, message.author.id);
+	let tracked = false;
+	try {
+		await sessionManager.track(session_id, dmChannel, url, message.author.id);
+		tracked = true;
 
-	const embed = new EmbedBuilder()
-		.setDescription(
-			`Talk to ${config.botName} here — [Open web app](${url})\n\n\u{1F4A1} **Tip:** Type \`mute\` to stop Devin from reading your messages`,
-		)
-		.setColor(EMBED_COLORS.working);
+		const embed = new EmbedBuilder()
+			.setDescription(
+				`Talk to ${config.botName} here — [Open web app](${url})\n\n\u{1F4A1} **Tip:** Type \`mute\` to stop Devin from reading your messages`,
+			)
+			.setColor(EMBED_COLORS.working);
 
-	await dmChannel.send({ embeds: [embed] });
+		await dmChannel.send({ embeds: [embed] });
+	} catch (err) {
+		if (!tracked) {
+			queue?.releaseSession(session_id, message.author.id);
+		}
+		throw err;
+	}
 }
