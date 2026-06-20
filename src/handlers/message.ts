@@ -164,7 +164,7 @@ async function handleThreadMessage(
 
 	try {
 		if ("sendTyping" in message.channel) {
-			await message.channel.sendTyping();
+			await message.channel.sendTyping().catch(() => {});
 		}
 
 		const attachmentLines = await processMessageAttachments(

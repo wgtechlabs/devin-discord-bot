@@ -378,7 +378,7 @@ export class SessionManager {
 	 */
 	private async postDevinMessage(session: TrackedSession, content: string): Promise<void> {
 		try {
-			await session.thread.sendTyping();
+			await session.thread.sendTyping().catch(() => {});
 			const chunks = this.splitMessage(content);
 			for (const chunk of chunks) {
 				await session.thread.send(chunk);
@@ -413,7 +413,7 @@ export class SessionManager {
 			}
 
 			chunks.push(remaining.slice(0, splitIndex));
-			remaining = remaining.slice(splitIndex + 1);
+			remaining = remaining.slice(splitIndex === maxLength ? splitIndex : splitIndex + 1);
 		}
 
 		return chunks;
