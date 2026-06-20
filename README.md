@@ -1,5 +1,5 @@
 
-# Devin Discord Bot [![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/xBGnRD?referralCode=KN9JqT&utm_medium=integration&utm_source=template&utm_campaign=generic)
+# Devin Discord Bot
 
 [![Devin Discord Bot – GitHub Repo Banner](https://ghrb.waren.build/banner?header=Devin+Discord+Bot+%F0%9F%A4%96&subheader=Self-hosted+Discord+bot+integration+for+Devin+AI&bg=4752C4-5865F2&color=FFFFFF)](https://github.com/wgtechlabs/devin-discord-bot)
 
@@ -10,19 +10,15 @@
 
 ---
 
-## Why
-
-Development teams already live in Discord. When a coding task comes up, context-switching to a separate tool breaks flow and slows teams down. Developers need Devin's autonomous coding power right where they already collaborate.
-
-## How
-
-Devin Discord Bot bridges Discord and the Devin AI API through a self-hosted TypeScript bot. Tag `@Devin` in any channel or use slash commands to start a session — the bot creates a dedicated thread, polls for updates, and posts real-time progress with color-coded status embeds. Thread conversations are automatically forwarded to Devin, enabling seamless back-and-forth without leaving Discord.
-
-## What
-
-A self-hosted Discord bot that integrates with the [Devin AI](https://devin.ai) API, built with TypeScript and discord.js. Start coding sessions, review PRs, write tests, and fix bugs — all from Discord.
+Devin Discord Bot is a self-hosted TypeScript integration that brings Devin AI directly into Discord, so teams can launch coding sessions with a mention or slash command, collaborate in dedicated threaded conversations with live status updates, and handle tasks like PRs, tests, and bug fixes without leaving the channels where they already work.
 
 ---
+
+## Deploy Your Own
+
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/devin-discord-bot?referralCode=KN9JqT&utm_medium=integration&utm_source=template&utm_campaign=generic)
+
+When you deploy your own copy, you're directly supporting this project! 💖
 
 ## Features
 
