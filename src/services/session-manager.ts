@@ -123,6 +123,7 @@ export class SessionManager {
 					createdAt: saved.createdAt,
 					originalMessageId: saved.originalMessageId,
 					originalChannelId: saved.originalChannelId,
+					postedPullRequests: new Set(),
 				};
 
 				this.sessions.set(saved.sessionId, session);
@@ -185,6 +186,7 @@ export class SessionManager {
 			createdAt: Date.now(),
 			originalMessageId: meta?.originalMessageId,
 			originalChannelId: meta?.originalChannelId,
+			postedPullRequests: new Set(),
 		};
 
 		this.sessions.set(sessionId, session);
@@ -348,7 +350,10 @@ export class SessionManager {
 
 		if (state.pull_requests?.length) {
 			for (const pr of state.pull_requests) {
-				await this.postPullRequest(session, pr);
+				if (!session.postedPullRequests.has(pr.url)) {
+					session.postedPullRequests.add(pr.url);
+					await this.postPullRequest(session, pr);
+				}
 			}
 		}
 
