@@ -7,7 +7,13 @@
  */
 
 import type { Interaction } from "discord.js";
-import { commandHandlers, handleTemplateSelect, handleTemplateSubmit } from "../commands/index.js";
+import {
+	allowlistHandlers,
+	commandHandlers,
+	handleTemplateSelect,
+	handleTemplateSubmit,
+} from "../commands/index.js";
+import type { AllowlistStore } from "../services/allowlist-store.js";
 import { createLogger } from "../services/logger.js";
 import type { SessionManager } from "../services/session-manager.js";
 import type { BotConfig } from "../types/index.js";
@@ -19,16 +25,30 @@ const log = createLogger("InteractionHandler");
  *
  * @param config - Validated bot configuration
  * @param sessionManager - Session tracking manager instance
+ * @param allowlistStore - DM allowlist persistence store
  * @returns Event handler function for the `interactionCreate` event
  */
-export function createInteractionHandler(config: BotConfig, sessionManager: SessionManager) {
+export function createInteractionHandler(
+	config: BotConfig,
+	sessionManager: SessionManager,
+	allowlistStore: AllowlistStore,
+) {
 	return async (interaction: Interaction): Promise<void> => {
 		try {
 			if (interaction.isChatInputCommand() && interaction.commandName === "devin") {
+				const group = interaction.options.getSubcommandGroup(false);
 				const subcommand = interaction.options.getSubcommand(false);
-				const handler = subcommand ? commandHandlers[subcommand] : undefined;
-				if (handler) {
-					await handler(interaction, config, sessionManager);
+
+				if (group === "allowlist" && subcommand) {
+					const handler = allowlistHandlers[subcommand];
+					if (handler) {
+						await handler(interaction, config, allowlistStore);
+					}
+				} else {
+					const handler = subcommand ? commandHandlers[subcommand] : undefined;
+					if (handler) {
+						await handler(interaction, config, sessionManager);
+					}
 				}
 			} else if (interaction.isStringSelectMenu() && interaction.customId === "template-select") {
 				await handleTemplateSelect(interaction);

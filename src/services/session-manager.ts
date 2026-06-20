@@ -6,12 +6,13 @@
  * and manages thread-level muting and session ownership.
  */
 
-import { type Client, EmbedBuilder, type ThreadChannel } from "discord.js";
+import { type Client, type DMChannel, EmbedBuilder, type ThreadChannel } from "discord.js";
 import {
 	EMBED_COLORS,
 	POLL_FAST_PERIOD,
 	POLL_INTERVAL_INITIAL,
 	POLL_INTERVAL_NORMAL,
+	TYPING_INDICATOR_INTERVAL,
 	getEmbedFooterText,
 } from "../config.js";
 import type {
@@ -19,6 +20,7 @@ import type {
 	DevinPullRequest,
 	DevinSessionState,
 	DevinSessionStatus,
+	SessionChannel,
 	TrackedSession,
 } from "../types/index.js";
 import { TERMINAL_STATUSES } from "../types/index.js";
@@ -104,7 +106,7 @@ export class SessionManager {
 		for (const saved of persisted) {
 			try {
 				const channel = await this.client.channels.fetch(saved.threadId);
-				if (!channel || !channel.isThread()) {
+				if (!channel || (!channel.isThread() && !channel.isDMBased())) {
 					log.warn(`Restore orphaned session ${saved.sessionId}: missing thread ${saved.threadId}`);
 					await this.stateStore.markStatus(saved.sessionId, "expired", "thread-missing");
 					continue;
@@ -112,7 +114,7 @@ export class SessionManager {
 
 				const session: TrackedSession = {
 					sessionId: saved.sessionId,
-					thread: channel,
+					thread: channel as ThreadChannel | DMChannel,
 					url: saved.url,
 					userId: saved.userId,
 					lastStatus: saved.lastStatus,
@@ -120,6 +122,7 @@ export class SessionManager {
 					statusReason: saved.statusReason,
 					muted: saved.muted,
 					pollTimer: null,
+					typingTimer: null,
 					createdAt: saved.createdAt,
 					originalMessageId: saved.originalMessageId,
 					originalChannelId: saved.originalChannelId,
@@ -134,6 +137,9 @@ export class SessionManager {
 				if (!TERMINAL_STATUSES.has(saved.lastStatus) && !permissionBlocked) {
 					this.queue?.registerActiveSession(saved.sessionId, saved.userId);
 					this.startPolling(saved.sessionId);
+					if (saved.lastStatus === "running") {
+						this.startTypingIndicator(saved.sessionId);
+					}
 				}
 			} catch (error) {
 				if (this.isPermissionError(error)) {
@@ -169,7 +175,7 @@ export class SessionManager {
 	 */
 	async track(
 		sessionId: string,
-		thread: ThreadChannel,
+		thread: SessionChannel,
 		url: string,
 		userId: string,
 		meta?: { originalMessageId?: string; originalChannelId?: string },
@@ -183,6 +189,7 @@ export class SessionManager {
 			lastMessageCount: 0,
 			muted: false,
 			pollTimer: null,
+			typingTimer: null,
 			createdAt: Date.now(),
 			originalMessageId: meta?.originalMessageId,
 			originalChannelId: meta?.originalChannelId,
@@ -192,6 +199,7 @@ export class SessionManager {
 		this.sessions.set(sessionId, session);
 		this.threadToSession.set(thread.id, sessionId);
 		this.startPolling(sessionId);
+		this.startTypingIndicator(sessionId);
 		this.queue?.registerActiveSession(sessionId, userId);
 		await this.persistState();
 
@@ -259,6 +267,7 @@ export class SessionManager {
 		if (!session) return;
 
 		this.stopPolling(sessionId);
+		this.stopTypingIndicator(sessionId);
 		session.lastStatus = "stopped";
 		session.statusReason = undefined;
 		await this.persistState();
@@ -319,6 +328,39 @@ export class SessionManager {
 	}
 
 	/**
+	 * Starts a continuous typing indicator for a session.
+	 * Fires every 8 seconds to keep the indicator visible in Discord
+	 * while the session is in a non-terminal, non-blocked status.
+	 */
+	private startTypingIndicator(sessionId: string): void {
+		const session = this.sessions.get(sessionId);
+		if (!session) return;
+		this.stopTypingIndicator(sessionId);
+
+		const sendTyping = () => {
+			if (TERMINAL_STATUSES.has(session.lastStatus) || session.lastStatus === "blocked") {
+				this.stopTypingIndicator(sessionId);
+				return;
+			}
+			session.thread.sendTyping().catch(() => {});
+		};
+
+		sendTyping();
+		session.typingTimer = setInterval(sendTyping, TYPING_INDICATOR_INTERVAL);
+	}
+
+	/**
+	 * Stops the continuous typing indicator for a session.
+	 */
+	private stopTypingIndicator(sessionId: string): void {
+		const session = this.sessions.get(sessionId);
+		if (session?.typingTimer) {
+			clearInterval(session.typingTimer);
+			session.typingTimer = null;
+		}
+	}
+
+	/**
 	 * Stops the polling timer for a session.
 	 */
 	private stopPolling(sessionId: string): void {
@@ -358,16 +400,22 @@ export class SessionManager {
 		}
 
 		if (state.status !== session.lastStatus) {
+			const previousStatus = session.lastStatus;
 			session.lastStatus = state.status;
 			session.statusReason = undefined;
 			await this.persistState();
 
 			if (TERMINAL_STATUSES.has(state.status)) {
 				this.stopPolling(sessionId);
+				this.stopTypingIndicator(sessionId);
 				await this.postStatusChange(session, state.status);
 				await this.updateOriginalReaction(session, state.status);
 				this.queue?.releaseSession(sessionId, session.userId);
 				await this.persistState();
+			} else if (state.status === "blocked") {
+				this.stopTypingIndicator(sessionId);
+			} else if (state.status === "running" && previousStatus === "blocked") {
+				this.startTypingIndicator(sessionId);
 			}
 		}
 	}
@@ -499,6 +547,7 @@ export class SessionManager {
 		}
 
 		this.stopPolling(sessionId);
+		this.stopTypingIndicator(sessionId);
 		session.lastStatus = "blocked";
 		session.statusReason = "permission-denied";
 		this.queue?.releaseSession(sessionId, session.userId);

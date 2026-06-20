@@ -10,11 +10,11 @@ import type { BotConfig, LogLevel } from "./types/index.js";
 
 /** Discord embed colors mapped to session status categories */
 export const EMBED_COLORS = {
-	working: 0xf5a623,
+	working: 0x016eea,
 	blocked: 0xe67e22,
 	finished: 0x2ecc71,
 	error: 0xe74c3c,
-	info: 0x5865f2,
+	info: 0x016eea,
 } as const;
 
 /** Footer text appended to all bot embeds */
@@ -47,6 +47,9 @@ export const POLL_INTERVAL_NORMAL = 15_000;
 
 /** Duration of the initial fast-polling period (milliseconds) */
 export const POLL_FAST_PERIOD = 120_000;
+
+/** Interval for refreshing the typing indicator in Discord (milliseconds) */
+export const TYPING_INDICATOR_INTERVAL = 8_000;
 
 /** Base URL for the Devin API */
 export const DEVIN_API_BASE_URL = "https://api.devin.ai/v1";

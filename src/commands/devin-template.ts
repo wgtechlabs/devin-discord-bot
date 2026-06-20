@@ -17,12 +17,7 @@ import {
 	TextInputBuilder,
 	TextInputStyle,
 } from "discord.js";
-import {
-	EMBED_COLORS,
-	THREAD_AUTO_ARCHIVE_DURATION,
-	THREAD_NAME_MAX_LENGTH,
-	getEmbedFooterText,
-} from "../config.js";
+import { EMBED_COLORS, THREAD_AUTO_ARCHIVE_DURATION, THREAD_NAME_MAX_LENGTH } from "../config.js";
 import { createSession } from "../services/devin-api.js";
 import { createLogger } from "../services/logger.js";
 import type { SessionManager } from "../services/session-manager.js";
@@ -179,21 +174,15 @@ export async function handleTemplateSubmit(
 		});
 
 		const embed = new EmbedBuilder()
-			.setTitle(`${config.botName} Session: ${template.name}`)
-			.setDescription(prompt)
-			.setColor(EMBED_COLORS.working)
-			.addFields(
-				{ name: "Status", value: "Working", inline: true },
-				{ name: "Session ID", value: `\`${session_id}\``, inline: true },
-				{ name: "View Session", value: `[Open in Devin](${url})` },
+			.setDescription(
+				`Talk to ${config.botName} in this thread \u2014 [Open web app](${url})\n\n\u{1F4A1} **Tip:** Type \`mute\` to stop Devin from reading your messages`,
 			)
-			.setTimestamp()
-			.setFooter({ text: getEmbedFooterText(config.botName) });
+			.setColor(EMBED_COLORS.working);
 
 		await sessionManager.track(session_id, thread, url, interaction.user.id);
 		tracked = true;
 		await thread.send({ embeds: [embed] });
-		await interaction.editReply(`Session started! Follow progress in ${thread}`);
+		await interaction.editReply(`Session started in ${thread}`);
 	} catch (err) {
 		if (!tracked) {
 			queue?.releaseSession(session_id, interaction.user.id);
