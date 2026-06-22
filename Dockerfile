@@ -35,6 +35,13 @@ RUN apk update && apk upgrade --no-cache && \
     rm -rf /root/.cache/node/corepack /usr/local/lib/node_modules/corepack && \
     rm -rf /var/cache/apk/*
 
+# Patch node-tar vulnerability in bundled npm (tar <=7.5.15)
+RUN cd /usr/local/lib/node_modules/npm/node_modules && \
+    npm pack tar@7.5.16 --pack-destination /tmp && \
+    rm -rf tar && mkdir tar && \
+    tar xzf /tmp/tar-7.5.16.tgz --strip-components=1 -C tar && \
+    rm /tmp/tar-7.5.16.tgz
+
 # Set working directory for all subsequent stages
 WORKDIR /usr/src/app
 
