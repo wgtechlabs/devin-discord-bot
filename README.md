@@ -1,7 +1,8 @@
 
 # Devin Discord Bot
 
-[![Devin Discord Bot – GitHub Repo Banner](https://ghrb.waren.build/banner?header=Devin+Discord+Bot+%F0%9F%A4%96&subheader=Self-hosted+Discord+bot+integration+for+Devin+AI&bg=4752C4-5865F2&color=FFFFFF)](https://github.com/wgtechlabs/devin-discord-bot)
+[![Devin Discord Bot – GitHub Repo Banner](https://ghrb.waren.build/banner?header=Devin+Discord+Bot+%F0%9F%A4%96&subheader=Self-hosted+Discord+bot+integration+for+Devin+AI&bg=013B84-016EEA&color=FFFFFF)](https://github.com/wgtechlabs/devin-discord-bot)
+<!-- Created with GitHub Repo Banner by Waren Gonzaga: https://ghrb.waren.build -->
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue.svg)](https://www.typescriptlang.org/)
@@ -16,7 +17,7 @@ Devin Discord Bot is a self-hosted TypeScript integration that brings Devin AI d
 
 ## Deploy Your Own
 
-[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/devin-discord-bot?referralCode=KN9JqT&utm_medium=integration&utm_source=template&utm_campaign=generic)
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/devin-ai-discord-bot?referralCode=dTwT-i&utm_medium=integration&utm_source=template&utm_campaign=generic)
 
 When you deploy your own copy, you're directly supporting this project! 💖
 
@@ -237,6 +238,34 @@ This project follows [Clean Flow](https://github.com/wgtechlabs/clean-flow), [Cl
 - **Commit Format**: `<emoji> <type>: <description>` (see Clean Commit)
 - **Labels**: 21 standardized labels across 5 categories (see `.github/labels.yml`)
 
-## License
+## 🐛 Issues
 
-GPL-3.0 — [WG Tech Labs](https://github.com/wgtechlabs)
+Please report any issues and bugs by [creating a new issue here](https://github.com/wgtechlabs/devin-discord-bot/issues/new/choose), also make sure you're reporting an issue that doesn't exist. Any help to improve the project would be appreciated. Thanks! 🙏✨
+
+## 🙏 Sponsor
+
+Like this project? Leave a star! ⭐⭐⭐⭐⭐
+
+Want to support my work and get some perks? [Become a sponsor](https://github.com/sponsors/warengonzaga)! 💖
+
+Or, you just love what I do? [Buy me a coffee](https://buymeacoffee.com/warengonzaga)! ☕
+
+Recognized my open-source contributions? [Nominate me](https://stars.github.com/nominate) as GitHub Star! 💫
+
+## 📋 Code of Conduct
+
+Read the project's [code of conduct](https://github.com/wgtechlabs/devin-discord-bot/blob/main/CODE_OF_CONDUCT.md).
+
+## 📃 License
+
+This project is licensed under [GNU General Public License v3.0](https://www.gnu.org/licenses/gpl-3.0.html).
+
+## 📝 Author
+
+This project is created by [Waren Gonzaga](https://github.com/warengonzaga), with the help of awesome [contributors](https://github.com/wgtechlabs/devin-discord-bot/graphs/contributors).
+
+[![contributors](https://contrib.rocks/image?repo=wgtechlabs/devin-discord-bot)](https://github.com/wgtechlabs/devin-discord-bot/graphs/contributors)
+
+---
+
+💻💖☕ by [Waren Gonzaga](https://warengonzaga.com) | [YHWH](https://www.youtube.com/watch?v=VOZbswniA-g) 🙏 - Without _Him_, none of this exists, _even me_.
