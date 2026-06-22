@@ -126,33 +126,39 @@ export class SessionStateStore {
 
 	async save(sessions: PersistedSessionState[]): Promise<void> {
 		await this.init();
-		for (const session of sessions) {
-			await this.client.query(UPSERT_SQL, [
-				session.sessionId,
-				session.threadId,
-				session.url,
-				session.userId,
-				session.lastStatus,
-				session.lastMessageCount,
-				session.muted,
-				session.createdAt,
-				session.statusReason ?? null,
-				session.originalMessageId ?? null,
-				session.originalChannelId ?? null,
-			]);
-		}
-	}
 
-	async markStatus(
-		sessionId: string,
-		lastStatus: DevinSessionStatus,
-		statusReason: string,
-	): Promise<void> {
-		await this.init();
-		await this.client.query(
-			"UPDATE tracked_sessions SET last_status = $2, status_reason = $3 WHERE session_id = $1",
-			[sessionId, lastStatus, statusReason],
-		);
+		await this.client.query("BEGIN");
+		try {
+			const currentIds = sessions.map((s) => s.sessionId);
+			if (currentIds.length > 0) {
+				await this.client.query(
+					"DELETE FROM tracked_sessions WHERE session_id <> ALL($1::text[])",
+					[currentIds],
+				);
+			} else {
+				await this.client.query("DELETE FROM tracked_sessions");
+			}
+
+			for (const session of sessions) {
+				await this.client.query(UPSERT_SQL, [
+					session.sessionId,
+					session.threadId,
+					session.url,
+					session.userId,
+					session.lastStatus,
+					session.lastMessageCount,
+					session.muted,
+					session.createdAt,
+					session.statusReason ?? null,
+					session.originalMessageId ?? null,
+					session.originalChannelId ?? null,
+				]);
+			}
+			await this.client.query("COMMIT");
+		} catch (err) {
+			await this.client.query("ROLLBACK");
+			throw err;
+		}
 	}
 
 	private parseRow(row: Record<string, unknown>): PersistedSessionState | null {

@@ -2,7 +2,7 @@
  * Top-level interaction event handler.
  *
  * Routes incoming Discord interactions (slash commands, select menus,
- * modal submissions) to the appropriate command or component handler.
+ * modal submissions, buttons) to the appropriate command or component handler.
  * Provides centralized error handling for all interaction types.
  */
 
@@ -10,6 +10,7 @@ import type { Interaction } from "discord.js";
 import {
 	allowlistHandlers,
 	commandHandlers,
+	handleReviewButton,
 	handleTemplateSelect,
 	handleTemplateSubmit,
 } from "../commands/index.js";
@@ -57,6 +58,8 @@ export function createInteractionHandler(
 				interaction.customId.startsWith("template-modal:")
 			) {
 				await handleTemplateSubmit(interaction, config, sessionManager);
+			} else if (interaction.isButton() && interaction.customId.startsWith("review-pr:")) {
+				await handleReviewButton(interaction, config, sessionManager);
 			}
 		} catch (err) {
 			log.error("Interaction error:", err);
