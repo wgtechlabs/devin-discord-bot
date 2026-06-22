@@ -126,6 +126,16 @@ export class SessionStateStore {
 
 	async save(sessions: PersistedSessionState[]): Promise<void> {
 		await this.init();
+
+		const currentIds = sessions.map((s) => s.sessionId);
+		if (currentIds.length > 0) {
+			await this.client.query("DELETE FROM tracked_sessions WHERE session_id <> ALL($1::text[])", [
+				currentIds,
+			]);
+		} else {
+			await this.client.query("DELETE FROM tracked_sessions");
+		}
+
 		for (const session of sessions) {
 			await this.client.query(UPSERT_SQL, [
 				session.sessionId,
