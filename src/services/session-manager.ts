@@ -6,7 +6,15 @@
  * and manages thread-level muting and session ownership.
  */
 
-import { type Client, type DMChannel, EmbedBuilder, type ThreadChannel } from "discord.js";
+import {
+	ActionRowBuilder,
+	ButtonBuilder,
+	ButtonStyle,
+	type Client,
+	type DMChannel,
+	EmbedBuilder,
+	type ThreadChannel,
+} from "discord.js";
 import {
 	EMBED_COLORS,
 	POLL_FAST_PERIOD,
@@ -490,6 +498,8 @@ export class SessionManager {
 
 	/**
 	 * Posts a pull request notification embed in the session thread.
+	 * Includes a "Review with Devin" button when the PR URL fits
+	 * within Discord's 100-character customId limit.
 	 */
 	private async postPullRequest(session: TrackedSession, pr: DevinPullRequest): Promise<void> {
 		const embed = new EmbedBuilder()
@@ -500,8 +510,26 @@ export class SessionManager {
 			.setTimestamp()
 			.setFooter({ text: getEmbedFooterText(this.config?.botName ?? "Devin") });
 
+		const CUSTOM_ID_PREFIX = "review-pr:";
+		const customId = `${CUSTOM_ID_PREFIX}${pr.url}`;
+		const messagePayload: {
+			embeds: EmbedBuilder[];
+			components?: ActionRowBuilder<ButtonBuilder>[];
+		} = { embeds: [embed] };
+
+		if (customId.length <= 100) {
+			const button = new ButtonBuilder()
+				.setCustomId(customId)
+				.setLabel("Review with Devin")
+				.setStyle(ButtonStyle.Primary)
+				.setEmoji("\uD83D\uDD0D");
+
+			const row = new ActionRowBuilder<ButtonBuilder>().addComponents(button);
+			messagePayload.components = [row];
+		}
+
 		try {
-			await session.thread.send({ embeds: [embed] });
+			await session.thread.send(messagePayload);
 		} catch (error) {
 			await this.handlePermissionLoss(session.sessionId, session, "post PR embed", error);
 		}
