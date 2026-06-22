@@ -211,6 +211,7 @@ export class SessionManager {
 			if (oldSession) {
 				this.stopPolling(existingSessionId);
 				this.stopTypingIndicator(existingSessionId);
+				this.queue?.releaseSession(existingSessionId, oldSession.userId);
 				this.sessions.delete(existingSessionId);
 			}
 		}
