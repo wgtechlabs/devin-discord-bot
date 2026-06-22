@@ -25,6 +25,7 @@ import type {
 } from "../types/index.js";
 import { TERMINAL_STATUSES } from "../types/index.js";
 import { getSessionState } from "./devin-api.js";
+import { formatMarkdownForDiscord } from "./discord-markdown.js";
 import { createLogger } from "./logger.js";
 import type { SessionQueue } from "./session-queue.js";
 import type { SessionStateStore } from "./state-store.js";
@@ -437,7 +438,8 @@ export class SessionManager {
 	private async postDevinMessage(session: TrackedSession, content: string): Promise<void> {
 		try {
 			await session.thread.sendTyping().catch(() => {});
-			const chunks = this.splitMessage(content);
+			const formatted = formatMarkdownForDiscord(content);
+			const chunks = this.splitMessage(formatted);
 			for (const chunk of chunks) {
 				await session.thread.send(chunk);
 			}
@@ -470,8 +472,17 @@ export class SessionManager {
 				splitIndex = maxLength;
 			}
 
-			chunks.push(remaining.slice(0, splitIndex));
-			remaining = remaining.slice(splitIndex === maxLength ? splitIndex : splitIndex + 1);
+			const chunk = remaining.slice(0, splitIndex);
+			const skip = splitIndex === maxLength ? splitIndex : splitIndex + 1;
+
+			const fenceCount = (chunk.match(/^```/gm) || []).length;
+			if (fenceCount % 2 !== 0) {
+				chunks.push(`${chunk}\n\`\`\``);
+				remaining = `\`\`\`\n${remaining.slice(skip)}`;
+			} else {
+				chunks.push(chunk);
+				remaining = remaining.slice(skip);
+			}
 		}
 
 		return chunks;
