@@ -117,7 +117,6 @@ export class SessionManager {
 				const channel = await this.client.channels.fetch(saved.threadId);
 				if (!channel || (!channel.isThread() && !channel.isDMBased())) {
 					log.warn(`Restore orphaned session ${saved.sessionId}: missing thread ${saved.threadId}`);
-					await this.stateStore.markStatus(saved.sessionId, "expired", "thread-missing");
 					continue;
 				}
 
@@ -156,7 +155,6 @@ export class SessionManager {
 						`Restore blocked session ${saved.sessionId}: permission error for thread ${saved.threadId}`,
 						error,
 					);
-					await this.stateStore.markStatus(saved.sessionId, "blocked", "permission-denied");
 					continue;
 				}
 				throw error;

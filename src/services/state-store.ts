@@ -161,18 +161,6 @@ export class SessionStateStore {
 		}
 	}
 
-	async markStatus(
-		sessionId: string,
-		lastStatus: DevinSessionStatus,
-		statusReason: string,
-	): Promise<void> {
-		await this.init();
-		await this.client.query(
-			"UPDATE tracked_sessions SET last_status = $2, status_reason = $3 WHERE session_id = $1",
-			[sessionId, lastStatus, statusReason],
-		);
-	}
-
 	private parseRow(row: Record<string, unknown>): PersistedSessionState | null {
 		const idForLog =
 			typeof row.session_id === "string"
