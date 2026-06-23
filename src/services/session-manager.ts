@@ -462,6 +462,8 @@ export class SessionManager {
 	private splitMessage(content: string, maxLength = 2000): string[] {
 		if (content.length <= maxLength) return [content];
 
+		const FENCE_OVERHEAD = 4;
+		const safeLength = maxLength - FENCE_OVERHEAD;
 		const chunks: string[] = [];
 		let remaining = content;
 
@@ -471,16 +473,16 @@ export class SessionManager {
 				break;
 			}
 
-			let splitIndex = remaining.lastIndexOf("\n", maxLength);
+			let splitIndex = remaining.lastIndexOf("\n", safeLength);
 			if (splitIndex <= 0) {
-				splitIndex = remaining.lastIndexOf(" ", maxLength);
+				splitIndex = remaining.lastIndexOf(" ", safeLength);
 			}
 			if (splitIndex <= 0) {
-				splitIndex = maxLength;
+				splitIndex = safeLength;
 			}
 
 			const chunk = remaining.slice(0, splitIndex);
-			const skip = splitIndex === maxLength ? splitIndex : splitIndex + 1;
+			const skip = splitIndex === safeLength ? splitIndex : splitIndex + 1;
 
 			const fenceCount = (chunk.match(/^```/gm) || []).length;
 			if (fenceCount % 2 !== 0) {
