@@ -231,7 +231,9 @@ async function handleSessionMessage(
 		await sendMessage(config.devinApiKey, sessionId, fullMessage, config.devinOrgId);
 	} catch (err) {
 		log.error("Failed to forward message to Devin:", err);
-		if (!opts.checkOwnership) {
+		if (opts.checkOwnership) {
+			await message.react("\u26A0\uFE0F").catch(() => {});
+		} else {
 			await message
 				.reply("Failed to send your message to Devin. Please try again.")
 				.catch(() => {});
