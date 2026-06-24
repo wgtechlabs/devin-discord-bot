@@ -9,28 +9,24 @@
 [![discord.js](https://img.shields.io/badge/discord.js-v14-5865F2.svg)](https://discord.js.org/)
 [![Bun](https://img.shields.io/badge/Bun-Runtime-f472b6.svg)](https://bun.sh/)
 
----
-
-Devin Discord Bot is a self-hosted TypeScript integration that brings Devin AI directly into Discord, so teams can launch coding sessions with a mention or slash command, collaborate in dedicated threaded conversations with live status updates, and handle tasks like PRs, tests, and bug fixes without leaving the channels where they already work.
-
----
+Devin Discord Bot is a self-hosted TypeScript integration that brings Devin AI into Discord. Start sessions with a mention or slash command, collaborate in dedicated threads with live status updates, and run tasks like PRs, tests, and bug fixes without leaving Discord.
 
 ## Deploy Your Own
 
 [![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/devin-ai-discord-bot?referralCode=dTwT-i&utm_medium=integration&utm_source=template&utm_campaign=generic)
 
-When you deploy your own copy, you're directly supporting this project! 💖
+Deploy your own copy and support the project. 💖
 
 ## Features
 
 - **Slash Commands** — `/devin start`, `/devin reply`, `/devin stop`, `/devin sessions`, `/devin template`
 - **@Mention Support** — Tag the bot in any channel to start a session
-- **Threaded Conversations** — Each session gets a dedicated thread with real-time updates
+- **Threaded Conversations** — Each session gets a dedicated thread with live updates
 - **Adaptive Polling** — Fast updates during active work, slower when idle
-- **Template System** — Pre-built templates for common tasks (PR, code review, tests, bug fix)
+- **Template System** — Pre-built templates for common tasks (PRs, code review, tests, bug fixes)
 - **File Attachments** — Upload files directly to Devin via Discord
 - **Thread Keywords** — `mute`, `unmute`, `!aside`, `EXIT` for in-thread control
-- **Status Embeds** — Color-coded session status with emoji indicators
+- **Status Embeds** — Color-coded status with emoji indicators
 - **Restart Recovery** — Session ownership and thread mapping persist across bot restarts
 - **Customizable Bot Name** — Set `BOT_NAME` in `.env` to rebrand embed headers and thread names
 - **Self-Hosted** — Full control over your data and deployment
@@ -51,7 +47,7 @@ When you deploy your own copy, you're directly supporting this project! 💖
 
 - **Node.js** 22+ (26 recommended)
 - **Bun** 1.0+
-- A **Discord bot** ([create one here](https://discord.com/developers/applications))
+- A **Discord bot** ([create one](https://discord.com/developers/applications))
   - Enable the **Message Content** privileged gateway intent
   - Invite with permissions: Send Messages, Send Messages in Threads, Create Public Threads, Embed Links, Read Message History, Add Reactions, Use Slash Commands
 - A **Devin API key** (starts with `apk_`)
@@ -59,7 +55,7 @@ When you deploy your own copy, you're directly supporting this project! 💖
 
 ## Quick Start
 
-### 1. Clone and install
+### 1. Install dependencies
 
 ```bash
 git clone https://github.com/wgtechlabs/devin-discord-bot.git
@@ -67,7 +63,7 @@ cd devin-discord-bot
 bun install
 ```
 
-### 2. Configure
+### 2. Configure environment
 
 ```bash
 cp .env.example .env
@@ -87,7 +83,7 @@ DEVIN_API_KEY=apk_your_api_key
 # BOT_NAME=Devin
 ```
 
-### 3. Run
+### 3. Run the bot
 
 ```bash
 # Development (with hot reload)
@@ -101,7 +97,7 @@ bun run start
 ### Deploy with Railway
 
 Use the **Deploy on Railway** button above for one-click hosting.
-Deploying via this template directly supports the author and ongoing project maintenance.
+Deploying from this template supports the author and ongoing maintenance.
 
 ## Usage
 
@@ -117,7 +113,7 @@ Deploying via this template directly supports the author and ongoing project mai
 
 ### @Mention
 
-Tag the bot in any text channel:
+Tag the bot (default: `@Devin`) in any text channel:
 
 > **@Devin** Write a Python script that fetches top stories from Hacker News
 
@@ -231,7 +227,7 @@ Notes:
 
 ## Workflow
 
-This project follows [Clean Flow](https://github.com/wgtechlabs/clean-flow), [Clean Commit](https://github.com/nicedoc/clean-commit), and [Clean Labels](https://github.com/wgtechlabs/clean-labels) conventions.
+This project follows [Clean Flow](https://github.com/wgtechlabs/clean-flow), [Clean Commit](https://github.com/wgtechlabs/clean-commit), and [Clean Labels](https://github.com/wgtechlabs/clean-labels) conventions.
 
 - **Branches**: `main` (stable) + `dev` (integration) + feature branches
 - **Merge Strategy**: Feature branches squash-merge into `dev`, `dev` merges into `main`
