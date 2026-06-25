@@ -906,13 +906,31 @@ code {
 	font-size: 0.95rem;
 }
 
-.railway-btn {
-	height: 44px;
+.support-note {
+	color: var(--text-muted);
+	font-size: 0.9rem;
+	margin-top: 12px;
+}
+
+.railway-link {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: var(--radius-sm);
 	transition: transform 0.2s;
 }
 
-.railway-btn:hover {
+.railway-link:hover {
 	transform: translateY(-2px);
+}
+
+.railway-btn {
+	height: 44px;
+	display: block;
+}
+
+.railway-btn-nav {
+	height: 36px;
 }
 
 /* ---- CTA ---- */
@@ -960,6 +978,7 @@ code {
 	display: flex;
 	flex-direction: column;
 	gap: 10px;
+	align-items: flex-start;
 }
 
 .footer-column h3 {
@@ -1149,6 +1168,7 @@ code {
 	}
 
 	.footer-column {
+		align-items: center;
 		text-align: center;
 	}
 
@@ -1184,5 +1204,15 @@ code {
 	.cta-actions .btn {
 		width: 100%;
 		justify-content: center;
+	}
+
+	.cta-actions .railway-link {
+		width: 100%;
+	}
+
+	.cta-actions .railway-btn {
+		height: auto;
+		width: 100%;
+		max-width: 230px;
 	}
 }
