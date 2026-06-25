@@ -1006,7 +1006,6 @@ code {
 	line-height: 1;
 }
 
-
 .footer-description {
 	max-width: 360px;
 	color: var(--text-secondary);
@@ -1024,13 +1023,11 @@ code {
 	color: var(--text-muted);
 }
 
-
 .footer-bottom a {
 	color: var(--text-secondary);
 	font-weight: 600;
 	transition: color 0.2s;
 }
-
 
 .footer-bottom a:hover {
 	color: var(--text-primary);
