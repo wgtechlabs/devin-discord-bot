@@ -107,6 +107,25 @@ code {
 	font-size: 1.125rem;
 }
 
+.nav-logo-text {
+	font-weight: 700;
+	color: var(--text-primary);
+	line-height: 1;
+}
+
+.nav-logo-badge {
+	display: inline-block;
+	padding: 2px 7px;
+	background: var(--discord-blurple);
+	color: var(--discord-white);
+	font-size: 0.625rem;
+	font-weight: 700;
+	line-height: 1.2;
+	letter-spacing: 0.02em;
+	border-radius: 4px;
+	box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12) inset;
+}
+
 .nav-logo-icon {
 	border-radius: 50%;
 }
@@ -833,52 +852,87 @@ code {
 /* ---- Footer ---- */
 .footer {
 	border-top: 1px solid var(--border-color);
-	padding: 32px 0;
+	background: linear-gradient(180deg, #0b0d10 0%, #090b0f 100%);
+	padding: 28px 0 32px;
 }
 
-.footer-content {
+.footer-main {
+	display: grid;
+	grid-template-columns: 1.2fr 1fr 1fr;
+	gap: 40px;
+	padding-bottom: 28px;
+	border-bottom: 1px solid var(--border-color);
+}
+
+.footer-column {
 	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	flex-wrap: wrap;
-	gap: 16px;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.footer-column h3 {
+	font-size: 1.1rem;
+	font-weight: 700;
+	letter-spacing: 0.02em;
+	margin-bottom: 8px;
+	color: var(--text-primary);
+}
+
+.footer-column a {
+	color: var(--text-secondary);
+	font-size: 0.95rem;
+	transition: color 0.2s;
+}
+
+.footer-column a:hover {
+	color: var(--text-primary);
 }
 
 .footer-brand {
-	display: flex;
+	display: inline-flex;
 	align-items: center;
 	gap: 8px;
 	font-weight: 700;
-	font-size: 0.95rem;
+	font-size: 1.1rem;
+	margin-bottom: 12px;
 }
 
-.footer-links {
-	display: flex;
-	gap: 24px;
+.footer-brand-text {
+	line-height: 1;
 }
 
-.footer-links a {
-	font-size: 0.85rem;
+
+.footer-description {
+	max-width: 360px;
 	color: var(--text-secondary);
-	transition: color 0.2s;
+	font-size: 0.95rem;
+	line-height: 1.7;
 }
 
-.footer-links a:hover {
-	color: var(--text-primary);
-}
-
-.footer-copy {
-	font-size: 0.8rem;
+.footer-bottom {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	padding-top: 22px;
+	font-size: 0.9rem;
 	color: var(--text-muted);
 }
 
-.footer-copy a {
+
+.footer-bottom a {
 	color: var(--text-secondary);
+	font-weight: 600;
 	transition: color 0.2s;
 }
 
-.footer-copy a:hover {
+
+.footer-bottom a:hover {
 	color: var(--text-primary);
+}
+
+.footer-bottom-made {
+	white-space: normal;
 }
 
 /* ---- Responsive ---- */
@@ -995,7 +1049,21 @@ code {
 		font-size: 1.75rem;
 	}
 
-	.footer-content {
+	.footer-main {
+		grid-template-columns: 1fr;
+		gap: 28px;
+	}
+
+	.footer-brand-column {
+		align-items: center;
+		text-align: center;
+	}
+
+	.footer-column {
+		text-align: center;
+	}
+
+	.footer-bottom {
 		flex-direction: column;
 		text-align: center;
 	}
