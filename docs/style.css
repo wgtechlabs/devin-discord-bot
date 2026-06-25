@@ -355,22 +355,8 @@ code {
 	width: 40px;
 	height: 40px;
 	border-radius: 50%;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	font-weight: 700;
-	font-size: 1rem;
+	object-fit: cover;
 	flex-shrink: 0;
-}
-
-.discord-msg-avatar.user {
-	background: #ed4245;
-	color: white;
-}
-
-.discord-msg-avatar.bot {
-	background: var(--discord-blurple);
-	color: white;
 }
 
 .discord-msg-content {
@@ -385,13 +371,14 @@ code {
 }
 
 .user-color {
-	color: #ed4245;
+	color: #00e1ff;
 }
 .bot-color {
 	color: var(--discord-blurple);
 }
 
-.bot-tag {
+.bot-tag,
+.app-tag {
 	display: inline-block;
 	padding: 1px 5px;
 	background: var(--discord-blurple);
