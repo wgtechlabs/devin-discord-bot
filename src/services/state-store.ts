@@ -100,10 +100,18 @@ ON CONFLICT (session_id) DO UPDATE SET
 
 export class SessionStateStore {
 	private readonly client: QueryClient;
+	private readonly pool: Pool | null;
 	private initialized = false;
 
 	constructor(databaseUrl: string, client?: QueryClient) {
-		this.client = client ?? new Pool({ connectionString: databaseUrl });
+		if (client) {
+			this.client = client;
+			this.pool = null;
+		} else {
+			const pool = new Pool({ connectionString: databaseUrl });
+			this.client = pool;
+			this.pool = pool;
+		}
 	}
 
 	private async init(): Promise<void> {
@@ -126,33 +134,51 @@ export class SessionStateStore {
 
 	async save(sessions: PersistedSessionState[]): Promise<void> {
 		await this.init();
-		for (const session of sessions) {
-			await this.client.query(UPSERT_SQL, [
-				session.sessionId,
-				session.threadId,
-				session.url,
-				session.userId,
-				session.lastStatus,
-				session.lastMessageCount,
-				session.muted,
-				session.createdAt,
-				session.statusReason ?? null,
-				session.originalMessageId ?? null,
-				session.originalChannelId ?? null,
-			]);
+
+		if (this.pool) {
+			const conn = await this.pool.connect();
+			try {
+				await this.executeSave(conn, sessions);
+			} finally {
+				conn.release();
+			}
+		} else {
+			await this.executeSave(this.client, sessions);
 		}
 	}
 
-	async markStatus(
-		sessionId: string,
-		lastStatus: DevinSessionStatus,
-		statusReason: string,
-	): Promise<void> {
-		await this.init();
-		await this.client.query(
-			"UPDATE tracked_sessions SET last_status = $2, status_reason = $3 WHERE session_id = $1",
-			[sessionId, lastStatus, statusReason],
-		);
+	private async executeSave(conn: QueryClient, sessions: PersistedSessionState[]): Promise<void> {
+		await conn.query("BEGIN");
+		try {
+			const currentIds = sessions.map((s) => s.sessionId);
+			if (currentIds.length > 0) {
+				await conn.query("DELETE FROM tracked_sessions WHERE session_id <> ALL($1::text[])", [
+					currentIds,
+				]);
+			} else {
+				await conn.query("DELETE FROM tracked_sessions");
+			}
+
+			for (const session of sessions) {
+				await conn.query(UPSERT_SQL, [
+					session.sessionId,
+					session.threadId,
+					session.url,
+					session.userId,
+					session.lastStatus,
+					session.lastMessageCount,
+					session.muted,
+					session.createdAt,
+					session.statusReason ?? null,
+					session.originalMessageId ?? null,
+					session.originalChannelId ?? null,
+				]);
+			}
+			await conn.query("COMMIT");
+		} catch (err) {
+			await conn.query("ROLLBACK");
+			throw err;
+		}
 	}
 
 	private parseRow(row: Record<string, unknown>): PersistedSessionState | null {
