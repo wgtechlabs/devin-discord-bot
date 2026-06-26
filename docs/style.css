@@ -959,6 +959,298 @@ code {
 	flex-wrap: wrap;
 }
 
+/* ---- Sponsor ---- */
+.sponsor-section {
+	padding: 100px 0;
+	position: relative;
+	overflow: hidden;
+	background: radial-gradient(circle at top, rgba(88, 101, 242, 0.08), transparent 42%);
+}
+
+.sponsor-section .container {
+	position: relative;
+	z-index: 1;
+}
+
+.sponsor-backdrop {
+	position: absolute;
+	inset: 0;
+	overflow: hidden;
+	pointer-events: none;
+	filter: blur(22px);
+	opacity: 1;
+}
+
+.sponsor-float {
+	position: absolute;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	font-size: clamp(3rem, 4.5vw, 6rem);
+	line-height: 1;
+	-webkit-user-select: none;
+	user-select: none;
+	animation: sponsor-drift 24s ease-in-out infinite;
+	text-shadow: 0 0 30px rgba(88, 101, 242, 0.32);
+}
+
+.sponsor-float-heart {
+	top: 6%;
+	left: 3%;
+	color: rgba(235, 69, 158, 0.56);
+	animation-delay: 0s;
+}
+
+.sponsor-float-money {
+	top: 8%;
+	right: 4%;
+	color: rgba(255, 214, 102, 0.54);
+	animation-delay: -3s;
+}
+
+.sponsor-float-heart-alt {
+	bottom: 28%;
+	left: 8%;
+	color: rgba(255, 255, 255, 0.3);
+	animation-delay: -6s;
+}
+
+.sponsor-float-coffee {
+	bottom: 10%;
+	right: 12%;
+	color: rgba(210, 180, 140, 0.5);
+	animation-delay: -9s;
+}
+
+.sponsor-float-magic {
+	top: 42%;
+	left: 50%;
+	transform: translateX(-50%);
+	color: rgba(88, 101, 242, 0.48);
+	animation-delay: -4.5s;
+}
+
+.sponsor-float-coin {
+	top: 26%;
+	left: 18%;
+	color: rgba(255, 214, 102, 0.5);
+	animation-delay: -7.5s;
+}
+
+.sponsor-float-spark {
+	top: 22%;
+	right: 20%;
+	color: rgba(255, 255, 255, 0.3);
+	animation-delay: -11s;
+}
+
+.sponsor-float-gift {
+	bottom: 32%;
+	left: 28%;
+	color: rgba(235, 69, 158, 0.44);
+	animation-delay: -13s;
+}
+
+.sponsor-float-heart-small {
+	bottom: 22%;
+	right: 28%;
+	color: rgba(235, 69, 158, 0.38);
+	animation-delay: -1.5s;
+}
+
+.sponsor-float-bill {
+	top: 56%;
+	right: 40%;
+	color: rgba(255, 214, 102, 0.44);
+	animation-delay: -12s;
+}
+
+@keyframes sponsor-drift {
+	0%,
+	100% {
+		transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
+	}
+	25% {
+		transform: translate3d(18px, -22px, 0) rotate(4deg) scale(1.08);
+	}
+	50% {
+		transform: translate3d(-12px, -44px, 0) rotate(-5deg) scale(1.16);
+	}
+	75% {
+		transform: translate3d(14px, -18px, 0) rotate(3deg) scale(1.09);
+	}
+}
+
+.sponsor-header {
+	text-align: center;
+	margin-bottom: 60px;
+}
+
+.section-kicker {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	margin-bottom: 14px;
+	font-size: 0.8rem;
+	font-weight: 700;
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	color: var(--discord-blurple);
+}
+
+.sponsor-grid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 24px;
+}
+
+.sponsor-card-shell {
+	position: relative;
+	border-radius: var(--radius-lg);
+	overflow: visible;
+}
+
+.sponsor-card-ring {
+	display: none;
+}
+
+.sponsor-card {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	text-align: center;
+	padding: 36px 28px 32px;
+	border: 1px solid var(--border-color);
+	border-radius: var(--radius-lg);
+	background: var(--bg-card);
+	box-shadow: 0 18px 48px rgba(0, 0, 0, 0.28);
+	min-height: 300px;
+	position: relative;
+	overflow: hidden;
+	transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+	isolation: isolate;
+	z-index: 1;
+}
+
+.sponsor-card-github {
+	background: var(--bg-card);
+}
+
+.sponsor-card-coffee {
+	background: var(--bg-card);
+}
+
+.sponsor-card::after {
+	content: "";
+	position: absolute;
+	inset: 1px;
+	border-radius: inherit;
+	background: radial-gradient(circle at top, rgba(255, 255, 255, 0.02), transparent 55%);
+	opacity: 0;
+	transition: opacity 0.2s ease;
+	pointer-events: none;
+	z-index: 0;
+}
+
+.sponsor-card:hover {
+	transform: translateY(-3px);
+	box-shadow: 0 22px 54px rgba(0, 0, 0, 0.36);
+}
+
+.sponsor-card:hover::after {
+	opacity: 1;
+}
+
+.sponsor-icon {
+	display: grid;
+	place-items: center;
+	width: 66px;
+	height: 66px;
+	margin-bottom: 22px;
+	border-radius: 999px;
+	font-size: 1.6rem;
+	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+	background: rgba(88, 101, 242, 0.12);
+	position: relative;
+	z-index: 1;
+}
+
+.sponsor-card-github .sponsor-icon {
+	background: rgba(235, 69, 158, 0.16);
+}
+
+.sponsor-card-coffee .sponsor-icon {
+	background: rgba(254, 231, 92, 0.14);
+}
+
+.sponsor-card h3 {
+	font-size: 1.55rem;
+	font-weight: 800;
+	margin-bottom: 12px;
+	position: relative;
+	z-index: 1;
+}
+
+.sponsor-card p {
+	max-width: 24ch;
+	color: var(--text-secondary);
+	font-size: 1rem;
+	line-height: 1.7;
+	margin-bottom: 24px;
+	position: relative;
+	z-index: 1;
+}
+
+.sponsor-button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 190px;
+	padding: 14px 22px;
+	border-radius: 999px;
+	font-weight: 700;
+	font-size: 0.95rem;
+	border: 1px solid transparent;
+	transition: transform 0.2s, box-shadow 0.2s, filter 0.2s;
+	position: relative;
+	z-index: 1;
+}
+
+.sponsor-button:hover {
+	transform: translateY(-2px);
+	filter: brightness(1.05);
+}
+
+.sponsor-button-github {
+	--sponsor-accent: #db2777;
+	background: linear-gradient(135deg, #f472b6, #db2777);
+	color: var(--discord-white);
+	box-shadow: 0 14px 28px rgba(219, 39, 119, 0.22);
+}
+
+.sponsor-button-coffee {
+	--sponsor-accent: #f5c400;
+	background: linear-gradient(135deg, #ffdd57, #f5c400);
+	color: #1b1b1b;
+	box-shadow: 0 14px 28px rgba(245, 196, 0, 0.2);
+}
+
+.sponsor-card-github {
+	border-color: rgba(219, 39, 119, 0.52);
+}
+
+.sponsor-card-coffee {
+	border-color: rgba(245, 196, 0, 0.5);
+}
+
+.sponsor-card-github:hover {
+	border-color: rgba(219, 39, 119, 0.68);
+}
+
+.sponsor-card-coffee:hover {
+	border-color: rgba(245, 196, 0, 0.66);
+}
+
 /* ---- Footer ---- */
 .footer {
 	border-top: 1px solid var(--border-color);
@@ -1157,6 +1449,18 @@ code {
 		font-size: 1.75rem;
 	}
 
+	.sponsor-section {
+		padding: 72px 0;
+	}
+
+	.sponsor-grid {
+		grid-template-columns: 1fr;
+	}
+
+	.sponsor-float {
+		font-size: 3.4rem;
+	}
+
 	.footer-main {
 		grid-template-columns: 1fr;
 		gap: 28px;
@@ -1214,5 +1518,15 @@ code {
 		height: auto;
 		width: 100%;
 		max-width: 230px;
+	}
+
+	.sponsor-card {
+		padding: 30px 22px 28px;
+		min-height: 0;
+	}
+
+	.sponsor-button {
+		width: 100%;
+		max-width: 250px;
 	}
 }
