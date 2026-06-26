@@ -11,6 +11,9 @@
  */
 
 import {
+	ActionRowBuilder,
+	ButtonBuilder,
+	ButtonStyle,
 	ChannelType,
 	type Client,
 	type DMChannel,
@@ -341,9 +344,13 @@ async function handleMention(
 
 		const embed = new EmbedBuilder()
 			.setDescription(
-				`Talk to ${config.botName} in this thread — [Open web app](${url})\n\n\u{1F4A1} **Tip:** Type \`mute\` to stop Devin from reading your messages`,
+				`Talk to ${config.botName} in this thread\n\n\u{1F4A1} **Tip:** Type \`mute\` to stop ${config.botName} from reading your messages`,
 			)
 			.setColor(EMBED_COLORS.working);
+
+		const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+			new ButtonBuilder().setLabel("Open web app").setStyle(ButtonStyle.Link).setURL(url),
+		);
 
 		await sessionManager.track(sessionId, thread, url, message.author.id, {
 			originalMessageId: message.id,
@@ -351,7 +358,7 @@ async function handleMention(
 		});
 		tracked = true;
 
-		await thread.send({ embeds: [embed] });
+		await thread.send({ embeds: [embed], components: [row] });
 	} catch (err) {
 		if (!tracked) {
 			sessionManager.getQueue()?.releaseSession(sessionId, message.author.id);
@@ -454,11 +461,15 @@ async function handleDmNewSession(
 
 		const embed = new EmbedBuilder()
 			.setDescription(
-				`Talk to ${config.botName} here — [Open web app](${url})\n\n\u{1F4A1} **Tip:** Type \`mute\` to stop Devin from reading your messages`,
+				`Talk to ${config.botName} here\n\n\u{1F4A1} **Tip:** Type \`mute\` to stop ${config.botName} from reading your messages`,
 			)
 			.setColor(EMBED_COLORS.working);
 
-		await dmChannel.send({ embeds: [embed] });
+		const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+			new ButtonBuilder().setLabel("Open web app").setStyle(ButtonStyle.Link).setURL(url),
+		);
+
+		await dmChannel.send({ embeds: [embed], components: [row] });
 	} catch (err) {
 		if (!tracked) {
 			sessionManager.getQueue()?.releaseSession(sessionId, message.author.id);
