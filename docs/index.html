@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Devin AI - Discord Bot - Self-Hosted Discord Bot for Devin AI</title>
+  <meta name="description" content="Bring Devin AI directly into Discord. Launch coding sessions, collaborate in threads, and handle tasks like PRs, tests, and bug fixes without leaving your channels." />
+  <meta property="og:title" content="Devin AI - Discord Bot" />
+  <meta property="og:description" content="Self-hosted Discord bot integration for Devin AI. Launch coding sessions with a mention or slash command." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://wgtechlabs.github.io/devin-discord-bot/" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Devin AI Discord Bot" />
+  <meta name="twitter:description" content="Self-hosted Discord bot integration for Devin AI." />
+  <link rel="icon" type="image/png" href="devin_icon.png" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="header">
+    <nav class="nav container">
+      <a href="#" class="nav-logo">
+        <img src="devin_icon.png" alt="Devin" class="nav-logo-icon" width="32" height="32" />
+        <span class="nav-logo-text">Devin AI</span>
+        <span class="nav-logo-badge">Discord Bot</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="#features">Features</a></li>
+        <li><a href="#commands">Commands</a></li>
+        <li><a href="#templates">Templates</a></li>
+        <li><a href="#tech-stack">Tech Stack</a></li>
+        <li><a href="#sponsor">Sponsor</a></li>
+        <li><a href="#quick-start">Quick Start</a></li>
+      </ul>
+      <div class="nav-actions">
+        <a href="https://github.com/wgtechlabs/devin-discord-bot" class="btn btn-secondary" target="_blank" rel="noopener noreferrer">
+          <svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+          GitHub
+        </a>
+        <a href="https://railway.com/deploy/devin-ai-discord-bot?referralCode=dTwT-i&utm_medium=integration&utm_source=wgtechlabs.com%2Fdevin-discord-bot&utm_campaign=generic" class="railway-link railway-link-nav" target="_blank" rel="noopener noreferrer" aria-label="Deploy on Railway">
+          <img src="https://railway.com/button.svg" alt="Deploy on Railway" class="railway-btn railway-btn-nav" />
+        </a>
+      </div>
+      <button class="nav-toggle" aria-label="Toggle navigation">
+        <span></span><span></span><span></span>
+      </button>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container">
+        <div class="hero-content">
+          <div class="hero-badge">Open Source &middot; Self-Hosted &middot; TypeScript</div>
+          <h1 class="hero-title">Bring <span class="highlight">Devin AI</span> to your Discord Server or DM</h1>
+          <p class="hero-subtitle">Launch coding sessions with a mention or slash command, collaborate in dedicated threads with live status updates, and handle PRs, tests, and bug fixes without leaving your channels.</p>
+          <div class="hero-actions">
+            <a href="#quick-start" class="btn btn-primary btn-lg">Get Started</a>
+            <a href="https://github.com/wgtechlabs/devin-discord-bot" class="btn btn-outline btn-lg" target="_blank" rel="noopener noreferrer">
+              <svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+              View on GitHub
+            </a>
+          </div>
+        </div>
+        <div class="hero-visual">
+          <div class="discord-mock">
+            <div class="discord-mock-header">
+              <span class="discord-mock-dot red"></span>
+              <span class="discord-mock-dot yellow"></span>
+              <span class="discord-mock-dot green"></span>
+              <span class="discord-mock-title"># engineering</span>
+            </div>
+            <div class="discord-mock-body">
+              <div class="discord-msg">
+                <img class="discord-msg-avatar" src="warengonzaga_avatar.png" alt="warengonzaga" />
+                <div class="discord-msg-content">
+                  <span class="discord-msg-author user-color">warengonzaga</span>
+                  <p><span class="mention">@Devin</span> Write a Python script that fetches top stories from Hacker News</p>
+                  <div class="discord-thread-indicator">
+                    <svg class="thread-icon" viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M5.43 21a.999.999 0 0 1-.218-1.975l5.365-1.213-1.213-5.365a1 1 0 0 1 1.952-.441l1.213 5.365 5.365-1.213a1 1 0 1 1 .44 1.951l-5.364 1.213 1.213 5.365a1 1 0 0 1-1.952.44L11.02 19.76l-5.365 1.214A1.009 1.009 0 0 1 5.43 21ZM18.571 11a.999.999 0 0 1-.218-1.975l1.365-.309-.309-1.365a1 1 0 0 1 1.952-.44l.308 1.364 1.365-.308a1 1 0 1 1 .44 1.951l-1.365.309.309 1.365a1 1 0 1 1-1.951.44l-.309-1.365-1.365.309a1.006 1.006 0 0 1-.222.024Z"/></svg>
+                    <span class="thread-label">Devin: Write a Python script that...</span>
+                    <span class="thread-count">3 messages</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="discord-thread-panel">
+              <div class="discord-thread-header">
+                <svg class="thread-icon" viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M5.43 21a.999.999 0 0 1-.218-1.975l5.365-1.213-1.213-5.365a1 1 0 0 1 1.952-.441l1.213 5.365 5.365-1.213a1 1 0 1 1 .44 1.951l-5.364 1.213 1.213 5.365a1 1 0 0 1-1.952.44L11.02 19.76l-5.365 1.214A1.009 1.009 0 0 1 5.43 21ZM18.571 11a.999.999 0 0 1-.218-1.975l1.365-.309-.309-1.365a1 1 0 0 1 1.952-.44l.308 1.364 1.365-.308a1 1 0 1 1 .44 1.951l-1.365.309.309 1.365a1 1 0 1 1-1.951.44l-.309-1.365-1.365.309a1.006 1.006 0 0 1-.222.024Z"/></svg>
+                <span>Devin: Write a Python script that...</span>
+              </div>
+              <div class="discord-thread-body">
+                <div class="discord-msg">
+                  <img class="discord-msg-avatar" src="devin_icon.png" alt="Devin" />
+                  <div class="discord-msg-content">
+                    <span class="discord-msg-author bot-color">Devin</span>
+                    <span class="app-tag">APP</span>
+                    <div class="discord-embed">
+                      <div class="discord-embed-bar working"></div>
+                      <div class="discord-embed-content">
+                        <p class="discord-embed-desc">Talk to Devin in this thread</p>
+                        <p class="discord-embed-tip">&#x1F4A1; <strong>Tip:</strong> Type <code>mute</code> to stop Devin from reading your messages</p>
+                      </div>
+                    </div>
+                    <div class="discord-btn-row">
+                      <a href="#" class="discord-btn-link">Open web app</a>
+                    </div>
+                  </div>
+                </div>
+                <div class="discord-msg">
+                  <img class="discord-msg-avatar" src="devin_icon.png" alt="Devin" />
+                  <div class="discord-msg-content">
+                    <span class="discord-msg-author bot-color">Devin</span>
+                    <span class="app-tag">APP</span>
+                    <p>On it! Writing a Python script to fetch top stories from the Hacker News API now.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="features" class="section features-section">
+      <div class="container">
+        <div class="section-header">
+          <h2>Features</h2>
+          <p>Everything you need to integrate Devin AI into your Discord workflow</p>
+        </div>
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon">⚡</div>
+            <h3>Slash Commands</h3>
+            <p>Start sessions, reply, stop, list active sessions, and use templates with intuitive slash commands.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">💬</div>
+            <h3>@Mention Support</h3>
+            <p>Tag the bot in any channel to instantly start a Devin session with your prompt.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🧵</div>
+            <h3>Threaded Conversations</h3>
+            <p>Each session gets a dedicated thread with real-time updates and full conversation history.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">📊</div>
+            <h3>Adaptive Polling</h3>
+            <p>Fast updates during active work, slower when idle. Efficient and always up to date.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">📎</div>
+            <h3>File Attachments</h3>
+            <p>Upload files directly to Devin through Discord. Share code, configs, or any file your task needs.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">📋</div>
+            <h3>Template System</h3>
+            <p>Pre-built templates for common tasks: PRs, code reviews, tests, and bug fixes.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🎨</div>
+            <h3>Status Embeds</h3>
+            <p>Color-coded session status with emoji indicators so you always know what Devin is doing.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🔄</div>
+            <h3>Restart Recovery</h3>
+            <p>Session ownership and thread mapping persist across bot restarts via PostgreSQL.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🏠</div>
+            <h3>Self-Hosted</h3>
+            <p>Full control over your data and deployment. Run it on your own infrastructure.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="commands" class="section commands-section">
+      <div class="container">
+        <div class="section-header">
+          <h2>Commands</h2>
+          <p>Interact with Devin directly from Discord</p>
+        </div>
+        <div class="commands-grid">
+          <div class="command-card">
+            <code class="command-name">/devin start</code>
+            <p>Start a new Devin session with a freeform task description</p>
+          </div>
+          <div class="command-card">
+            <code class="command-name">/devin template</code>
+            <p>Start a session from a pre-built template for common workflows</p>
+          </div>
+          <div class="command-card">
+            <code class="command-name">/devin reply</code>
+            <p>Send a follow-up message to Devin in a session thread</p>
+          </div>
+          <div class="command-card">
+            <code class="command-name">/devin stop</code>
+            <p>Terminate an active session from within the session thread</p>
+          </div>
+          <div class="command-card">
+            <code class="command-name">/devin sessions</code>
+            <p>List all currently active Devin sessions in your server</p>
+          </div>
+          <div class="command-card">
+            <code class="command-name">@Devin &lt;task&gt;</code>
+            <p>Mention the bot in any channel to start a session instantly</p>
+          </div>
+        </div>
+        <div class="keywords-section">
+          <h3>Thread Keywords</h3>
+          <div class="keywords-grid">
+            <div class="keyword-item">
+              <code>mute</code>
+              <span>Stop forwarding messages to Devin</span>
+            </div>
+            <div class="keyword-item">
+              <code>unmute</code>
+              <span>Resume forwarding messages to Devin</span>
+            </div>
+            <div class="keyword-item">
+              <code>!aside</code>
+              <span>Message is ignored by Devin</span>
+            </div>
+            <div class="keyword-item">
+              <code>EXIT</code>
+              <span>Terminate the session</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="templates" class="section templates-section">
+      <div class="container">
+        <div class="section-header">
+          <h2>Templates</h2>
+          <p>Get started quickly with pre-built prompts for common tasks</p>
+        </div>
+        <div class="templates-grid">
+          <div class="template-card">
+            <div class="template-icon">🔀</div>
+            <h3>Open a PR</h3>
+            <p>Write code and open a pull request with a single command.</p>
+          </div>
+          <div class="template-card">
+            <div class="template-icon">🔍</div>
+            <h3>Code Review</h3>
+            <p>Review an existing pull request for issues and suggestions.</p>
+          </div>
+          <div class="template-card">
+            <div class="template-icon">🧪</div>
+            <h3>Write Tests</h3>
+            <p>Add test coverage to your repository quickly and efficiently.</p>
+          </div>
+          <div class="template-card">
+            <div class="template-icon">🐛</div>
+            <h3>Fix a Bug</h3>
+            <p>Investigate and fix bugs with Devin's help.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="status" class="section status-section">
+      <div class="container">
+        <div class="section-header">
+          <h2>Status Indicators</h2>
+          <p>Always know what Devin is doing with color-coded status embeds</p>
+        </div>
+        <div class="status-grid">
+          <div class="status-card">
+            <div class="status-dot working-dot"></div>
+            <div class="status-info">
+              <h3>Working</h3>
+              <p>Devin is actively working on your task</p>
+            </div>
+          </div>
+          <div class="status-card">
+            <div class="status-dot blocked-dot"></div>
+            <div class="status-info">
+              <h3>Blocked</h3>
+              <p>Devin needs input or clarification</p>
+            </div>
+          </div>
+          <div class="status-card">
+            <div class="status-dot finished-dot"></div>
+            <div class="status-info">
+              <h3>Finished</h3>
+              <p>Task completed successfully</p>
+            </div>
+          </div>
+          <div class="status-card">
+            <div class="status-dot error-dot"></div>
+            <div class="status-info">
+              <h3>Error</h3>
+              <p>Session expired, stopped, or failed</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tech-stack" class="section tech-section">
+      <div class="container">
+        <div class="section-header">
+          <h2>Tech Stack</h2>
+          <p>Built with modern, reliable technologies</p>
+        </div>
+        <div class="tech-grid">
+          <div class="tech-card">
+            <div class="tech-label">Language</div>
+            <div class="tech-value">TypeScript 5.8+</div>
+          </div>
+          <div class="tech-card">
+            <div class="tech-label">Runtime</div>
+            <div class="tech-value">Node.js 22-26</div>
+          </div>
+          <div class="tech-card">
+            <div class="tech-label">Framework</div>
+            <div class="tech-value">discord.js v14</div>
+          </div>
+          <div class="tech-card">
+            <div class="tech-label">Toolchain</div>
+            <div class="tech-value">Bun</div>
+          </div>
+          <div class="tech-card">
+            <div class="tech-label">Linter</div>
+            <div class="tech-value">Biome</div>
+          </div>
+          <div class="tech-card">
+            <div class="tech-label">Database</div>
+            <div class="tech-value">PostgreSQL 14+</div>
+          </div>
+          <div class="tech-card">
+            <div class="tech-label">Testing</div>
+            <div class="tech-value">Bun Test</div>
+          </div>
+          <div class="tech-card">
+            <div class="tech-label">CI</div>
+            <div class="tech-value">GitHub Actions</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="quick-start" class="section quickstart-section">
+      <div class="container">
+        <div class="section-header">
+          <h2>Quick Start</h2>
+          <p>Get up and running in minutes</p>
+        </div>
+        <div class="steps">
+          <div class="step">
+            <div class="step-number">1</div>
+            <div class="step-content">
+              <h3>Clone and install</h3>
+              <pre><code>git clone https://github.com/wgtechlabs/devin-discord-bot.git
+cd devin-discord-bot
+bun install</code></pre>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-number">2</div>
+            <div class="step-content">
+              <h3>Configure</h3>
+              <pre><code>cp .env.example .env</code></pre>
+              <p>Edit <code>.env</code> with your Discord bot token, client ID, database URL, and Devin API key.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-number">3</div>
+            <div class="step-content">
+              <h3>Run</h3>
+              <pre><code># Development (with hot reload)
+bun run dev
+
+# Production
+bun run build
+bun run start</code></pre>
+            </div>
+          </div>
+        </div>
+        <div class="quickstart-deploy">
+          <p>Or deploy instantly with one click:</p>
+          <a href="https://railway.com/deploy/devin-ai-discord-bot?referralCode=dTwT-i&utm_medium=integration&utm_source=wgtechlabs.com%2Fdevin-discord-bot&utm_campaign=generic" class="railway-link" target="_blank" rel="noopener noreferrer" aria-label="Deploy on Railway">
+            <img src="https://railway.com/button.svg" alt="Deploy on Railway" class="railway-btn" />
+          </a>
+          <p class="support-note">Deploying via Railway directly supports the project and ongoing maintenance.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="sponsor" class="section sponsor-section">
+      <div class="container">
+        <div class="sponsor-backdrop" aria-hidden="true">
+          <span class="sponsor-float sponsor-float-heart">❤</span>
+          <span class="sponsor-float sponsor-float-money">💸</span>
+          <span class="sponsor-float sponsor-float-heart-alt">💖</span>
+          <span class="sponsor-float sponsor-float-coffee">☕</span>
+          <span class="sponsor-float sponsor-float-magic">✨</span>
+          <span class="sponsor-float sponsor-float-coin">🪙</span>
+          <span class="sponsor-float sponsor-float-spark">💫</span>
+          <span class="sponsor-float sponsor-float-gift">🎁</span>
+          <span class="sponsor-float sponsor-float-heart-small">💝</span>
+          <span class="sponsor-float sponsor-float-bill">💰</span>
+        </div>
+        <div class="section-header sponsor-header">
+          <h2>Support this open source project</h2>
+          <p>Want to support this open source project and help keep Devin AI moving forward? Here’s how:</p>
+        </div>
+
+        <div class="sponsor-grid">
+          <div class="sponsor-card-shell sponsor-card-shell-github">
+            <div class="sponsor-card-ring" aria-hidden="true">
+              <div class="sponsor-card-ring-spin"></div>
+            </div>
+            <article class="sponsor-card sponsor-card-github">
+              <div class="sponsor-icon">❤</div>
+              <h3>GitHub Sponsors</h3>
+              <p>Become a sponsor and help fund ongoing open source development.</p>
+              <a href="https://github.com/sponsors/wgtechlabs" class="sponsor-button sponsor-button-github" target="_blank" rel="noopener noreferrer">
+                Become a Sponsor
+              </a>
+            </article>
+          </div>
+
+          <div class="sponsor-card-shell sponsor-card-shell-coffee">
+            <div class="sponsor-card-ring" aria-hidden="true">
+              <div class="sponsor-card-ring-spin"></div>
+            </div>
+            <article class="sponsor-card sponsor-card-coffee">
+              <div class="sponsor-icon">☕</div>
+              <h3>Buy Me a Coffee</h3>
+              <p>A one-time coffee is a simple way to say thanks and keep this project going.</p>
+              <a href="https://buymeacoffee.com/wgtechlabs" class="sponsor-button sponsor-button-coffee" target="_blank" rel="noopener noreferrer">
+                Buy Me a Coffee
+              </a>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section cta-section">
+      <div class="container">
+        <div class="cta-content">
+          <h2>Ready to bring Devin AI to your Discord?</h2>
+          <p>Open source, self-hosted, and built for developer teams.</p>
+          <p class="support-note">Using Railway to deploy helps support this project directly.</p>
+          <div class="cta-actions">
+            <a href="https://github.com/wgtechlabs/devin-discord-bot" class="btn btn-primary btn-lg" target="_blank" rel="noopener noreferrer">
+              <svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+              Get Started on GitHub
+            </a>
+            <a href="https://railway.com/deploy/devin-ai-discord-bot?referralCode=dTwT-i&utm_medium=integration&utm_source=wgtechlabs.com%2Fdevin-discord-bot&utm_campaign=generic" class="railway-link" target="_blank" rel="noopener noreferrer" aria-label="Deploy on Railway">
+              <img src="https://railway.com/button.svg" alt="Deploy on Railway" class="railway-btn" />
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-main">
+        <div class="footer-column footer-brand-column">
+          <div class="footer-brand">
+            <img src="devin_icon.png" alt="Devin" class="nav-logo-icon" width="28" height="28" />
+            <span class="footer-brand-text">Devin AI</span>
+            <span class="nav-logo-badge">Discord Bot</span>
+          </div>
+          <p class="footer-description">Bring Devin AI into your channels with a self-hosted Discord bot built for engineering teams.</p>
+        </div>
+
+        <div class="footer-column">
+          <h3>Project</h3>
+          <a href="https://github.com/wgtechlabs/devin-discord-bot" target="_blank" rel="noopener noreferrer">GitHub Repository</a>
+          <a href="https://github.com/wgtechlabs/devin-discord-bot/issues" target="_blank" rel="noopener noreferrer">Report an Issue</a>
+          <a href="https://github.com/wgtechlabs/devin-discord-bot/blob/main/README.md#contributing" target="_blank" rel="noopener noreferrer">Contributing Guide</a>
+          <a href="https://github.com/wgtechlabs/devin-discord-bot/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">GPL-3.0</a>
+        </div>
+
+        <div class="footer-column">
+          <h3>Follow</h3>
+          <a href="https://github.com/wgtechlabs" target="_blank" rel="noopener noreferrer">@wgtechlabs on GitHub</a>
+          <a href="https://wgtechlabs.com" target="_blank" rel="noopener noreferrer">wgtechlabs.com</a>
+          <a href="https://github.com/sponsors/wgtechlabs" target="_blank" rel="noopener noreferrer">Sponsor on GitHub</a>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>&copy; 2026 <a href="https://wgtechlabs.com" target="_blank" rel="noopener noreferrer">WG Technology Labs</a>. Licensed under GPL-3.0.</p>
+        <p class="footer-bottom-made">🖥️💖☕ by <a href="https://warengonzaga.com" target="_blank" rel="noopener noreferrer">Waren Gonzaga</a> &amp; <a href="https://www.youtube.com/watch?v=VOZbswniA-g" target="_blank" rel="noopener noreferrer">YHWH</a> 🙏 &mdash; Without <em>Him</em>, none of this exists, <strong>even me</strong>.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

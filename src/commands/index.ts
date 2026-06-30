@@ -153,3 +153,5 @@ export {
 	handleTemplateSelect,
 	handleTemplateSubmit,
 } from "./devin-template.js";
+
+export { handleReviewButton } from "./devin-review.js";

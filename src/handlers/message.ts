@@ -11,6 +11,9 @@
  */
 
 import {
+	ActionRowBuilder,
+	ButtonBuilder,
+	ButtonStyle,
 	ChannelType,
 	type Client,
 	type DMChannel,
@@ -33,6 +36,42 @@ import type { BotConfig } from "../types/index.js";
 import { TERMINAL_STATUSES } from "../types/index.js";
 
 const log = createLogger("MessageHandler");
+
+/** Response style for session keyword actions */
+interface KeywordResponder {
+	onExit: (message: Message) => Promise<void>;
+	onMute: (message: Message) => Promise<void>;
+	onUnmute: (message: Message) => Promise<void>;
+	onMuted: (message: Message) => Promise<void>;
+	onTerminal: (message: Message) => Promise<void>;
+	onForwardAck: (message: Message, client: Client) => Promise<void>;
+	onForwardDone: (message: Message, client: Client) => Promise<void>;
+}
+
+const THREAD_RESPONDER: KeywordResponder = {
+	onExit: (m) => m.react("\u23F9\uFE0F").then(() => {}),
+	onMute: (m) => m.react("\uD83D\uDD07").then(() => {}),
+	onUnmute: (m) => m.react("\uD83D\uDD0A").then(() => {}),
+	onMuted: (m) => m.react("\uD83D\uDD07").then(() => {}),
+	onTerminal: (m) => m.react("\u26A0\uFE0F").then(() => {}),
+	onForwardAck: (m) => m.react("\uD83D\uDC40").then(() => {}),
+	onForwardDone: (m, client) =>
+		m.reactions
+			.resolve("\uD83D\uDC40")
+			?.users.remove(client.user?.id)
+			.catch(() => {})
+			.then(() => {}) ?? Promise.resolve(),
+};
+
+const DM_RESPONDER: KeywordResponder = {
+	onExit: (m) => m.reply("Session stopped.").then(() => {}),
+	onMute: (m) => m.reply("Session muted. Messages will not be forwarded to Devin.").then(() => {}),
+	onUnmute: (m) => m.reply("Session unmuted. Messages will be forwarded to Devin.").then(() => {}),
+	onMuted: (m) => m.reply("Session is muted. Type `unmute` to resume.").then(() => {}),
+	onTerminal: () => Promise.resolve(),
+	onForwardAck: () => Promise.resolve(),
+	onForwardDone: () => Promise.resolve(),
+};
 
 /**
  * Strips bot mention tags from a message's text content.
@@ -113,24 +152,26 @@ export function createMessageHandler(
 }
 
 /**
- * Handles a message in a session thread. Checks for control keywords
- * (EXIT, mute, unmute, !aside) and forwards regular messages to Devin.
+ * Handles keywords and message forwarding for an active session.
+ * Shared by both thread and DM flows; response style is controlled by the responder.
  */
-async function handleThreadMessage(
+async function handleSessionMessage(
 	message: Message,
 	sessionId: string,
 	client: Client,
 	config: BotConfig,
 	sessionManager: SessionManager,
-): Promise<void> {
-	const content = stripMention(message.content, client.user?.id ?? "");
+	responder: KeywordResponder,
+	opts: { checkOwnership: boolean; contentExtractor: (msg: Message) => string },
+): Promise<"handled" | "terminal"> {
+	const content = opts.contentExtractor(message);
 	const lower = content.toLowerCase();
 	const tracked = sessionManager.getTracked(sessionId);
 
 	if (lower === "exit") {
-		if (tracked && message.author.id !== tracked.userId) {
+		if (opts.checkOwnership && tracked && message.author.id !== tracked.userId) {
 			await message.react("\uD83D\uDEAB");
-			return;
+			return "handled";
 		}
 		try {
 			await terminateSession(config.devinApiKey, sessionId, config.devinOrgId);
@@ -138,45 +179,45 @@ async function handleThreadMessage(
 			log.error("Failed to terminate session:", err);
 		}
 		await sessionManager.userStop(sessionId);
-		await message.react("\u23F9\uFE0F");
-		return;
+		await responder.onExit(message);
+		return "handled";
 	}
 
 	if (lower === "mute") {
-		if (tracked && message.author.id !== tracked.userId) {
+		if (opts.checkOwnership && tracked && message.author.id !== tracked.userId) {
 			await message.react("\uD83D\uDEAB");
-			return;
+			return "handled";
 		}
 		await sessionManager.setMuted(sessionId, true);
-		await message.react("\uD83D\uDD07");
-		return;
+		await responder.onMute(message);
+		return "handled";
 	}
 
 	if (lower === "unmute") {
-		if (tracked && message.author.id !== tracked.userId) {
+		if (opts.checkOwnership && tracked && message.author.id !== tracked.userId) {
 			await message.react("\uD83D\uDEAB");
-			return;
+			return "handled";
 		}
 		await sessionManager.setMuted(sessionId, false);
-		await message.react("\uD83D\uDD0A");
-		return;
+		await responder.onUnmute(message);
+		return "handled";
 	}
 
-	if (lower.startsWith("!aside") || lower.startsWith("(aside)")) return;
+	if (lower.startsWith("!aside") || lower.startsWith("(aside)")) return "handled";
 
 	if (sessionManager.isMuted(sessionId)) {
-		await message.react("\uD83D\uDD07");
-		return;
+		await responder.onMuted(message);
+		return "handled";
 	}
 
 	if (tracked && TERMINAL_STATUSES.has(tracked.lastStatus)) {
-		await message.react("\u26A0\uFE0F");
-		return;
+		await responder.onTerminal(message);
+		return "terminal";
 	}
 
-	if (!content && message.attachments.size === 0) return;
+	if (!content && message.attachments.size === 0) return "handled";
 
-	await message.react("\uD83D\uDC40");
+	await responder.onForwardAck(message, client);
 
 	try {
 		if ("sendTyping" in message.channel) {
@@ -191,12 +232,67 @@ async function handleThreadMessage(
 		const fullMessage = (content || "") + attachmentLines;
 
 		await sendMessage(config.devinApiKey, sessionId, fullMessage, config.devinOrgId);
+	} catch (err) {
+		log.error("Failed to forward message to Devin:", err);
+		if (opts.checkOwnership) {
+			await message.react("\u26A0\uFE0F").catch(() => {});
+		} else {
+			await message
+				.reply("Failed to send your message to Devin. Please try again.")
+				.catch(() => {});
+		}
 	} finally {
-		await message.reactions
-			.resolve("\uD83D\uDC40")
-			?.users.remove(client.user?.id)
-			.catch(() => {});
+		await responder.onForwardDone(message, client);
 	}
+
+	return "handled";
+}
+
+/**
+ * Handles a message in a session thread.
+ */
+async function handleThreadMessage(
+	message: Message,
+	sessionId: string,
+	client: Client,
+	config: BotConfig,
+	sessionManager: SessionManager,
+): Promise<void> {
+	await handleSessionMessage(message, sessionId, client, config, sessionManager, THREAD_RESPONDER, {
+		checkOwnership: true,
+		contentExtractor: (msg) => stripMention(msg.content, client.user?.id ?? ""),
+	});
+}
+
+/**
+ * Creates a Devin session via the queue (if available) or directly.
+ * Shared by both @mention and DM session creation flows.
+ */
+async function createDevinSession(
+	message: Message,
+	prompt: string,
+	config: BotConfig,
+	sessionManager: SessionManager,
+): Promise<{ sessionId: string; url: string }> {
+	const queue = sessionManager.getQueue();
+
+	if (queue) {
+		try {
+			const result = await queue.enqueue(message.author.id, prompt, (p) =>
+				createSession(config.devinApiKey, p, config.devinOrgId),
+			);
+			return { sessionId: result.sessionId, url: result.url };
+		} catch (err) {
+			if (err instanceof SessionQueueError) {
+				await message.reply(err.message);
+				return { sessionId: "", url: "" };
+			}
+			throw err;
+		}
+	}
+
+	const result = await createSession(config.devinApiKey, prompt, config.devinOrgId);
+	return { sessionId: result.session_id, url: result.url };
 }
 
 /**
@@ -230,32 +326,10 @@ async function handleMention(
 	);
 	const prompt = (task || "See attached files.") + attachmentLines;
 
-	const queue = sessionManager.getQueue();
+	const { sessionId, url } = await createDevinSession(message, prompt, config, sessionManager);
+	if (!sessionId) return;
 
-	let session_id: string;
-	let url: string;
-
-	if (queue) {
-		try {
-			const result = await queue.enqueue(message.author.id, prompt, (p) =>
-				createSession(config.devinApiKey, p, config.devinOrgId),
-			);
-			session_id = result.sessionId;
-			url = result.url;
-		} catch (err) {
-			if (err instanceof SessionQueueError) {
-				await message.reply(err.message);
-				return;
-			}
-			throw err;
-		}
-	} else {
-		const result = await createSession(config.devinApiKey, prompt, config.devinOrgId);
-		session_id = result.session_id;
-		url = result.url;
-	}
-
-	log.info(`Session created via @mention: ${session_id}`);
+	log.info(`Session created via @mention: ${sessionId}`);
 
 	let tracked = false;
 	try {
@@ -265,25 +339,29 @@ async function handleMention(
 		const thread = await message.startThread({
 			name: threadName,
 			autoArchiveDuration: THREAD_AUTO_ARCHIVE_DURATION,
-			reason: `Devin session ${session_id}`,
+			reason: `Devin session ${sessionId}`,
 		});
 
 		const embed = new EmbedBuilder()
 			.setDescription(
-				`Talk to ${config.botName} in this thread — [Open web app](${url})\n\n\u{1F4A1} **Tip:** Type \`mute\` to stop Devin from reading your messages`,
+				`Talk to ${config.botName} in this thread\n\n\u{1F4A1} **Tip:** Type \`mute\` to stop ${config.botName} from reading your messages`,
 			)
 			.setColor(EMBED_COLORS.working);
 
-		await sessionManager.track(session_id, thread, url, message.author.id, {
+		const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+			new ButtonBuilder().setLabel("Open web app").setStyle(ButtonStyle.Link).setURL(url),
+		);
+
+		await sessionManager.track(sessionId, thread, url, message.author.id, {
 			originalMessageId: message.id,
 			originalChannelId: message.channelId,
 		});
 		tracked = true;
 
-		await thread.send({ embeds: [embed] });
+		await thread.send({ embeds: [embed], components: [row] });
 	} catch (err) {
 		if (!tracked) {
-			queue?.releaseSession(session_id, message.author.id);
+			sessionManager.getQueue()?.releaseSession(sessionId, message.author.id);
 		}
 		throw err;
 	}
@@ -318,8 +396,8 @@ async function handleDirectMessage(
 }
 
 /**
- * Forwards a message to an existing DM session.
- * Supports the same keywords as thread sessions (EXIT, mute, unmute, !aside).
+ * Handles a message in an existing DM session.
+ * Routes terminal sessions to new session creation.
  */
 async function handleDmSessionMessage(
 	message: Message,
@@ -328,63 +406,21 @@ async function handleDmSessionMessage(
 	config: BotConfig,
 	sessionManager: SessionManager,
 ): Promise<void> {
-	const content = message.content.trim();
-	const lower = content.toLowerCase();
-	const tracked = sessionManager.getTracked(sessionId);
+	const result = await handleSessionMessage(
+		message,
+		sessionId,
+		client,
+		config,
+		sessionManager,
+		DM_RESPONDER,
+		{
+			checkOwnership: false,
+			contentExtractor: (msg) => msg.content.trim(),
+		},
+	);
 
-	if (lower === "exit") {
-		try {
-			await terminateSession(config.devinApiKey, sessionId, config.devinOrgId);
-		} catch (err) {
-			log.error("Failed to terminate DM session:", err);
-		}
-		await sessionManager.userStop(sessionId);
-		await message.reply("Session stopped.");
-		return;
-	}
-
-	if (lower === "mute") {
-		await sessionManager.setMuted(sessionId, true);
-		await message.reply("Session muted. Messages will not be forwarded to Devin.");
-		return;
-	}
-
-	if (lower === "unmute") {
-		await sessionManager.setMuted(sessionId, false);
-		await message.reply("Session unmuted. Messages will be forwarded to Devin.");
-		return;
-	}
-
-	if (lower.startsWith("!aside") || lower.startsWith("(aside)")) return;
-
-	if (sessionManager.isMuted(sessionId)) {
-		await message.reply("Session is muted. Type `unmute` to resume.");
-		return;
-	}
-
-	if (tracked && TERMINAL_STATUSES.has(tracked.lastStatus)) {
+	if (result === "terminal") {
 		await handleDmNewSession(message, client, config, sessionManager);
-		return;
-	}
-
-	if (!content && message.attachments.size === 0) return;
-
-	try {
-		if ("sendTyping" in message.channel) {
-			await message.channel.sendTyping().catch(() => {});
-		}
-
-		const attachmentLines = await processMessageAttachments(
-			config.devinApiKey,
-			message,
-			config.devinOrgId,
-		);
-		const fullMessage = (content || "") + attachmentLines;
-
-		await sendMessage(config.devinApiKey, sessionId, fullMessage, config.devinOrgId);
-	} catch (err) {
-		log.error("Failed to forward DM to Devin:", err);
-		await message.reply("Failed to send your message to Devin. Please try again.").catch(() => {});
 	}
 }
 
@@ -411,50 +447,32 @@ async function handleDmNewSession(
 	);
 	const prompt = (task || "See attached files.") + attachmentLines;
 
-	const queue = sessionManager.getQueue();
+	const { sessionId, url } = await createDevinSession(message, prompt, config, sessionManager);
+	if (!sessionId) return;
 
-	let session_id: string;
-	let url: string;
-
-	if (queue) {
-		try {
-			const result = await queue.enqueue(message.author.id, prompt, (p) =>
-				createSession(config.devinApiKey, p, config.devinOrgId),
-			);
-			session_id = result.sessionId;
-			url = result.url;
-		} catch (err) {
-			if (err instanceof SessionQueueError) {
-				await message.reply(err.message);
-				return;
-			}
-			throw err;
-		}
-	} else {
-		const result = await createSession(config.devinApiKey, prompt, config.devinOrgId);
-		session_id = result.session_id;
-		url = result.url;
-	}
-
-	log.info(`DM session created: ${session_id} for user ${message.author.id}`);
+	log.info(`DM session created: ${sessionId} for user ${message.author.id}`);
 
 	const dmChannel = message.channel as DMChannel;
 
 	let tracked = false;
 	try {
-		await sessionManager.track(session_id, dmChannel, url, message.author.id);
+		await sessionManager.track(sessionId, dmChannel, url, message.author.id);
 		tracked = true;
 
 		const embed = new EmbedBuilder()
 			.setDescription(
-				`Talk to ${config.botName} here — [Open web app](${url})\n\n\u{1F4A1} **Tip:** Type \`mute\` to stop Devin from reading your messages`,
+				`Talk to ${config.botName} here\n\n\u{1F4A1} **Tip:** Type \`mute\` to stop ${config.botName} from reading your messages`,
 			)
 			.setColor(EMBED_COLORS.working);
 
-		await dmChannel.send({ embeds: [embed] });
+		const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+			new ButtonBuilder().setLabel("Open web app").setStyle(ButtonStyle.Link).setURL(url),
+		);
+
+		await dmChannel.send({ embeds: [embed], components: [row] });
 	} catch (err) {
 		if (!tracked) {
-			queue?.releaseSession(session_id, message.author.id);
+			sessionManager.getQueue()?.releaseSession(sessionId, message.author.id);
 		}
 		throw err;
 	}

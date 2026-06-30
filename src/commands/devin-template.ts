@@ -8,6 +8,8 @@
 
 import {
 	ActionRowBuilder,
+	ButtonBuilder,
+	ButtonStyle,
 	type ChatInputCommandInteraction,
 	EmbedBuilder,
 	ModalBuilder,
@@ -175,13 +177,17 @@ export async function handleTemplateSubmit(
 
 		const embed = new EmbedBuilder()
 			.setDescription(
-				`Talk to ${config.botName} in this thread \u2014 [Open web app](${url})\n\n\u{1F4A1} **Tip:** Type \`mute\` to stop Devin from reading your messages`,
+				`Talk to ${config.botName} in this thread\n\n\u{1F4A1} **Tip:** Type \`mute\` to stop ${config.botName} from reading your messages`,
 			)
 			.setColor(EMBED_COLORS.working);
 
+		const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+			new ButtonBuilder().setLabel("Open web app").setStyle(ButtonStyle.Link).setURL(url),
+		);
+
 		await sessionManager.track(session_id, thread, url, interaction.user.id);
 		tracked = true;
-		await thread.send({ embeds: [embed] });
+		await thread.send({ embeds: [embed], components: [row] });
 		await interaction.editReply(`Session started in ${thread}`);
 	} catch (err) {
 		if (!tracked) {

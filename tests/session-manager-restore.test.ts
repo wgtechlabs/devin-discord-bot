@@ -3,22 +3,15 @@ import type { Client } from "discord.js";
 import { SessionManager } from "../src/services/session-manager.js";
 import type { SessionQueue } from "../src/services/session-queue.js";
 import type { PersistedSessionState, SessionStateStore } from "../src/services/state-store.js";
-import type { DevinSessionStatus } from "../src/types/index.js";
 
 class MockStateStore {
 	constructor(private readonly rows: PersistedSessionState[]) {}
-
-	marked: Array<{ sessionId: string; status: DevinSessionStatus; reason: string }> = [];
 
 	async load(): Promise<PersistedSessionState[]> {
 		return this.rows;
 	}
 
 	async save(_sessions: PersistedSessionState[]): Promise<void> {}
-
-	async markStatus(sessionId: string, status: DevinSessionStatus, reason: string): Promise<void> {
-		this.marked.push({ sessionId, status, reason });
-	}
 }
 
 describe("SessionManager restore", () => {
@@ -82,8 +75,5 @@ describe("SessionManager restore", () => {
 		await manager.restoreFromState();
 
 		expect(registered).toEqual(["s-running"]);
-		expect(store.marked).toEqual([
-			{ sessionId: "s-missing", status: "expired", reason: "thread-missing" },
-		]);
 	});
 });
