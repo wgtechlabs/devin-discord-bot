@@ -8,6 +8,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [0.3.0] - 2026-06-30
+
+### Added
+
+- add landing page and github pages deployment (#32)
+- add Review with Devin button to PR embeds (#28)
+
+### Changed
+
+- update README for clarity and consistency
+- fix pool transaction, splitMessage overflow, and thread error feedback (#31)
+- update README with new deployment link and add sponsor section
+- add icon for devin
+- convert markdown tables to code blocks for Discord (#27)
+
+### Removed
+
+- delete unused label configuration
+
+### Security
+
+- patch node-tar vulnerability
+- patch undici and node-tar vulnerabilities (#26)
+
 ## [0.2.0] - 2026-06-20
 
 ### Added
