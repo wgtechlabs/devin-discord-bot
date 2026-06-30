@@ -114,7 +114,9 @@ code {
 }
 
 .nav-logo-badge {
-	display: inline-block;
+	display: inline-flex;
+	align-items: center;
+	gap: 3px;
 	padding: 2px 7px;
 	background: var(--discord-blurple);
 	color: var(--discord-white);
@@ -124,6 +126,12 @@ code {
 	letter-spacing: 0.02em;
 	border-radius: 4px;
 	box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12) inset;
+}
+
+.badge-icon {
+	width: 10px;
+	height: 10px;
+	flex-shrink: 0;
 }
 
 .nav-logo-icon {
