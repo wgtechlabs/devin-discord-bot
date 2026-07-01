@@ -40,6 +40,42 @@ import type { SessionStateStore } from "./state-store.js";
 
 const log = createLogger("SessionManager");
 
+type DiscordAttachmentFile = { attachment: Buffer; name: string };
+
+export function extractDevinAttachments(content: string): { content: string; urls: string[] } {
+	const urls: string[] = [];
+	const lines = content.split("\n").filter((line) => {
+		const match = line.match(/^\s*ATTACHMENT:(.+)\s*$/);
+		if (!match) return true;
+
+		const url = parseDevinAttachmentUrl(match[1].trim());
+		if (!url) return true;
+
+		urls.push(url);
+		return false;
+	});
+
+	return { content: lines.join("\n").trim(), urls };
+}
+
+function parseDevinAttachmentUrl(raw: string): string | null {
+	try {
+		const value: unknown = JSON.parse(raw);
+		const url =
+			typeof value === "string"
+				? value
+				: value && typeof value === "object" && "url" in value && typeof value.url === "string"
+					? value.url
+					: null;
+		if (!url) return null;
+
+		const parsed = new URL(url);
+		return parsed.protocol === "http:" || parsed.protocol === "https:" ? parsed.toString() : null;
+	} catch {
+		return null;
+	}
+}
+
 /**
  * Maps session status values to human-readable display strings
  * with color-coded emoji indicators.
@@ -445,14 +481,50 @@ export class SessionManager {
 	private async postDevinMessage(session: TrackedSession, content: string): Promise<void> {
 		try {
 			await session.thread.sendTyping().catch(() => {});
-			const formatted = formatMarkdownForDiscord(content);
-			const chunks = this.splitMessage(formatted);
+			const extracted = extractDevinAttachments(content);
+			const { files, failedUrls } = await this.fetchDevinAttachments(extracted.urls);
+			const formatted = formatMarkdownForDiscord(extracted.content);
+			const fallbackLinks = failedUrls.map((url) => `Attachment: ${url}`).join("\n");
+			const text = [formatted, fallbackLinks].filter(Boolean).join("\n");
+			const chunks = text ? this.splitMessage(text) : [];
+			const queuedFiles = [...files];
+
 			for (const chunk of chunks) {
-				await session.thread.send(chunk);
+				const messageFiles = queuedFiles.splice(0, 10);
+				await session.thread.send(
+					messageFiles.length > 0 ? { content: chunk, files: messageFiles } : chunk,
+				);
+			}
+
+			while (queuedFiles.length > 0) {
+				await session.thread.send({ files: queuedFiles.splice(0, 10) });
 			}
 		} catch (error) {
 			await this.handlePermissionLoss(session.sessionId, session, "post Devin message", error);
 		}
+	}
+
+	private async fetchDevinAttachments(
+		urls: string[],
+	): Promise<{ files: DiscordAttachmentFile[]; failedUrls: string[] }> {
+		const files: DiscordAttachmentFile[] = [];
+		const failedUrls: string[] = [];
+
+		for (const url of urls) {
+			try {
+				const response = await fetch(url);
+				if (!response.ok) throw new Error(`Attachment fetch failed: ${response.status}`);
+
+				const parsed = new URL(url);
+				const name = decodeURIComponent(parsed.pathname.split("/").pop() || "attachment");
+				files.push({ attachment: Buffer.from(await response.arrayBuffer()), name });
+			} catch (error) {
+				log.error(`Failed to fetch Devin attachment ${url}:`, error);
+				failedUrls.push(url);
+			}
+		}
+
+		return { files, failedUrls };
 	}
 
 	/**
