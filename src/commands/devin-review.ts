@@ -21,6 +21,7 @@ import { SessionQueueError } from "../services/session-queue.js";
 import type { BotConfig } from "../types/index.js";
 
 const log = createLogger("Command:DevinReview");
+const clickedReviewButtons = new Set<string>();
 
 /**
  * Handles the "Review with Devin" button click on a PR embed.
@@ -37,8 +38,22 @@ export async function handleReviewButton(
 	sessionManager: SessionManager,
 ): Promise<void> {
 	const prUrl = interaction.customId.replace("review-pr:", "");
+	const buttonKey = `${interaction.message.id}:${interaction.customId}`;
+
+	if (clickedReviewButtons.has(buttonKey)) {
+		await interaction.reply({
+			content: "Review session is already starting.",
+			ephemeral: true,
+		});
+		return;
+	}
+
+	clickedReviewButtons.add(buttonKey);
 
 	await interaction.deferReply({ ephemeral: true });
+	await interaction.message.edit({ components: [] }).catch((err) => {
+		log.warn("Failed to remove review button:", err);
+	});
 
 	const prompt = `Review this pull request: ${prUrl}`;
 	const queue = sessionManager.getQueue();
@@ -46,24 +61,25 @@ export async function handleReviewButton(
 	let sessionId: string;
 	let url: string;
 
-	if (queue) {
-		try {
+	try {
+		if (queue) {
 			const result = await queue.enqueue(interaction.user.id, prompt, (p) =>
 				createSession(config.devinApiKey, p, config.devinOrgId),
 			);
 			sessionId = result.sessionId;
 			url = result.url;
-		} catch (err) {
-			if (err instanceof SessionQueueError) {
-				await interaction.editReply(err.message);
-				return;
-			}
-			throw err;
+		} else {
+			const result = await createSession(config.devinApiKey, prompt, config.devinOrgId);
+			sessionId = result.session_id;
+			url = result.url;
 		}
-	} else {
-		const result = await createSession(config.devinApiKey, prompt, config.devinOrgId);
-		sessionId = result.session_id;
-		url = result.url;
+	} catch (err) {
+		clickedReviewButtons.delete(buttonKey);
+		if (err instanceof SessionQueueError) {
+			await interaction.editReply(err.message);
+			return;
+		}
+		throw err;
 	}
 
 	log.info(`Review session created: ${sessionId} for PR ${prUrl}`);
