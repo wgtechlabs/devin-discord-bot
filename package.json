@@ -1,6 +1,6 @@
 {
 	"name": "devin-discord-bot",
-	"version": "0.2.0",
+	"version": "0.3.0",
 	"description": "Self-hosted Discord bot integration for Devin AI",
 	"type": "module",
 	"main": "dist/index.js",
@@ -40,6 +40,7 @@
 		"node": ">=22.0.0"
 	},
 	"dependencies": {
+		"@wgtechlabs/log-engine": "^1.0.0",
 		"discord.js": "^14.18.0",
 		"pg": "^8.22.0"
 	},
