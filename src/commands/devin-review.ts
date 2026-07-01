@@ -21,6 +21,7 @@ import { SessionQueueError } from "../services/session-queue.js";
 import type { BotConfig } from "../types/index.js";
 
 const log = createLogger("Command:DevinReview");
+const clickedReviewButtons = new Set<string>();
 
 /**
  * Handles the "Review with Devin" button click on a PR embed.
@@ -37,8 +38,29 @@ export async function handleReviewButton(
 	sessionManager: SessionManager,
 ): Promise<void> {
 	const prUrl = interaction.customId.replace("review-pr:", "");
+	const buttonKey = `${interaction.message.id}:${interaction.customId}`;
 
-	await interaction.deferReply({ ephemeral: true });
+	if (clickedReviewButtons.has(buttonKey)) {
+		await interaction.reply({
+			content: "Review session is already starting.",
+			ephemeral: true,
+		});
+		return;
+	}
+
+	clickedReviewButtons.add(buttonKey);
+
+	try {
+		await interaction.deferReply({ ephemeral: true });
+	} catch (err) {
+		clickedReviewButtons.delete(buttonKey);
+		throw err;
+	}
+	await interaction.message.edit({ components: [] }).catch((err) => {
+		log.warn("Failed to remove review button:", err);
+	});
+	// ponytail: key only guards the race window before the edit; Discord prevents further clicks once button is removed
+	clickedReviewButtons.delete(buttonKey);
 
 	const prompt = `Review this pull request: ${prUrl}`;
 	const queue = sessionManager.getQueue();
@@ -46,24 +68,24 @@ export async function handleReviewButton(
 	let sessionId: string;
 	let url: string;
 
-	if (queue) {
-		try {
+	try {
+		if (queue) {
 			const result = await queue.enqueue(interaction.user.id, prompt, (p) =>
 				createSession(config.devinApiKey, p, config.devinOrgId),
 			);
 			sessionId = result.sessionId;
 			url = result.url;
-		} catch (err) {
-			if (err instanceof SessionQueueError) {
-				await interaction.editReply(err.message);
-				return;
-			}
-			throw err;
+		} else {
+			const result = await createSession(config.devinApiKey, prompt, config.devinOrgId);
+			sessionId = result.session_id;
+			url = result.url;
 		}
-	} else {
-		const result = await createSession(config.devinApiKey, prompt, config.devinOrgId);
-		sessionId = result.session_id;
-		url = result.url;
+	} catch (err) {
+		if (err instanceof SessionQueueError) {
+			await interaction.editReply(err.message);
+			return;
+		}
+		throw err;
 	}
 
 	log.info(`Review session created: ${sessionId} for PR ${prUrl}`);
