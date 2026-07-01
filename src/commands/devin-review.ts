@@ -50,10 +50,17 @@ export async function handleReviewButton(
 
 	clickedReviewButtons.add(buttonKey);
 
-	await interaction.deferReply({ ephemeral: true });
+	try {
+		await interaction.deferReply({ ephemeral: true });
+	} catch (err) {
+		clickedReviewButtons.delete(buttonKey);
+		throw err;
+	}
 	await interaction.message.edit({ components: [] }).catch((err) => {
 		log.warn("Failed to remove review button:", err);
 	});
+	// ponytail: key only guards the race window before the edit; Discord prevents further clicks once button is removed
+	clickedReviewButtons.delete(buttonKey);
 
 	const prompt = `Review this pull request: ${prUrl}`;
 	const queue = sessionManager.getQueue();
@@ -74,7 +81,6 @@ export async function handleReviewButton(
 			url = result.url;
 		}
 	} catch (err) {
-		clickedReviewButtons.delete(buttonKey);
 		if (err instanceof SessionQueueError) {
 			await interaction.editReply(err.message);
 			return;

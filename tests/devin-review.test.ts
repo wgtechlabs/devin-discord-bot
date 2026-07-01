@@ -52,7 +52,13 @@ describe("handleReviewButton", () => {
 		expect(interaction.message.edit).toHaveBeenCalledWith({ components: [] });
 	});
 
-	test("ignores duplicate clicks for the same source message", async () => {
+	test("blocks concurrent duplicate clicks while the first is still in flight", async () => {
+		// Simulate two clicks arriving before deferReply resolves (the race window).
+		let resolveDeferReply!: () => void;
+		const deferReplyPromise = new Promise<void>((resolve) => {
+			resolveDeferReply = resolve;
+		});
+
 		const enqueue = mock(async () => ({
 			sessionId: "session-2",
 			url: "https://app.devin.ai/sessions/session-2",
@@ -65,9 +71,18 @@ describe("handleReviewButton", () => {
 			track: mock(async () => undefined),
 		} as unknown as SessionManager;
 
-		await handleReviewButton(createInteraction("message-duplicate"), config, sessionManager);
-		const duplicate = createInteraction("message-duplicate");
+		// First click — hangs at deferReply.
+		const first = createInteraction("message-concurrent");
+		(first as Record<string, unknown>).deferReply = mock(() => deferReplyPromise);
+		const firstCall = handleReviewButton(first, config, sessionManager);
+
+		// Second click arrives while first is still awaiting deferReply.
+		const duplicate = createInteraction("message-concurrent");
 		await handleReviewButton(duplicate, config, sessionManager);
+
+		// Let the first call finish.
+		resolveDeferReply();
+		await firstCall;
 
 		expect(enqueue).toHaveBeenCalledTimes(1);
 		expect(duplicate.reply).toHaveBeenCalledWith({
