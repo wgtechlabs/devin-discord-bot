@@ -51,7 +51,7 @@ Deploy your own copy and support the project. 💖
   - **OAuth2 > URL Generator**: select scopes `bot` and `applications.commands` only
   - **Integration Type**: Guild Install
   - **Bot permissions**: View Channels, Send Messages, Create Public Threads, Send Messages in Threads, Embed Links, Attach Files, Read Message History, Add Reactions, Use Slash Commands
-  - **Generated guild install link**: https://discord.com/oauth2/authorize?client_id=910807697954308106&permissions=311385246784&integration_type=0&scope=bot+applications.commands
+  - **Generated guild install link**: copy the URL Discord generates for you — it will look like `https://discord.com/oauth2/authorize?client_id=YOUR_CLIENT_ID&permissions=311385246784&integration_type=0&scope=bot+applications.commands`
   - **Bot tab**: Public Bot off, Requires OAuth2 Code Grant off, Presence Intent on, Server Members Intent on, Message Content Intent on
 - A **Devin API key** (starts with `apk_`)
 - **PostgreSQL** 14+ (for persistent session state)

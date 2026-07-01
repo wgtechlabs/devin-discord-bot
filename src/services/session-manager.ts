@@ -55,7 +55,7 @@ export function extractDevinAttachments(content: string): { content: string; url
 		return false;
 	});
 
-	return { content: lines.join("\n").trim(), urls };
+	return { content: lines.join("\n").trimEnd(), urls };
 }
 
 function parseDevinAttachmentUrl(raw: string): string | null {
@@ -504,6 +504,12 @@ export class SessionManager {
 		}
 	}
 
+	// ponytail: allowed hosts guard — upgrade path is config if Devin adds CDN domains
+	private static readonly ALLOWED_ATTACHMENT_HOSTS = new Set(["app.devin.ai", "devin.ai"]);
+	// 25 MB — Discord's max file upload size
+	private static readonly MAX_ATTACHMENT_BYTES = 25 * 1024 * 1024;
+	private static readonly FETCH_TIMEOUT_MS = 30_000;
+
 	private async fetchDevinAttachments(
 		urls: string[],
 	): Promise<{ files: DiscordAttachmentFile[]; failedUrls: string[] }> {
@@ -512,12 +518,35 @@ export class SessionManager {
 
 		for (const url of urls) {
 			try {
-				const response = await fetch(url);
+				const parsed = new URL(url);
+				if (!SessionManager.ALLOWED_ATTACHMENT_HOSTS.has(parsed.hostname)) {
+					throw new Error(`Blocked attachment from untrusted host: ${parsed.hostname}`);
+				}
+
+				const controller = new AbortController();
+				const timeout = setTimeout(() => controller.abort(), SessionManager.FETCH_TIMEOUT_MS);
+				let response: Response;
+				try {
+					response = await fetch(url, { signal: controller.signal });
+				} finally {
+					clearTimeout(timeout);
+				}
 				if (!response.ok) throw new Error(`Attachment fetch failed: ${response.status}`);
 
-				const parsed = new URL(url);
+				const contentLength = response.headers.get("content-length");
+				if (contentLength && Number(contentLength) > SessionManager.MAX_ATTACHMENT_BYTES) {
+					throw new Error(
+						`Attachment too large: ${contentLength} bytes (max ${SessionManager.MAX_ATTACHMENT_BYTES})`,
+					);
+				}
+
+				const buffer = Buffer.from(await response.arrayBuffer());
+				if (buffer.byteLength > SessionManager.MAX_ATTACHMENT_BYTES) {
+					throw new Error(`Attachment too large after download: ${buffer.byteLength} bytes`);
+				}
+
 				const name = decodeURIComponent(parsed.pathname.split("/").pop() || "attachment");
-				files.push({ attachment: Buffer.from(await response.arrayBuffer()), name });
+				files.push({ attachment: buffer, name });
 			} catch (error) {
 				log.error(`Failed to fetch Devin attachment ${url}:`, error);
 				failedUrls.push(url);
