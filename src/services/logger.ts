@@ -4,29 +4,33 @@
  * Provides namespaced log output with configurable verbosity.
  * Each module creates its own logger instance with a descriptive
  * namespace prefix for easy filtering in production logs.
+ *
+ * Uses @wgtechlabs/log-engine for structured logging.
  */
 
+import { LogEngine, LogMode } from "@wgtechlabs/log-engine";
 import type { LogLevel } from "../types/index.js";
 
-/** Numeric priority for each log level (lower = more verbose) */
-const LOG_LEVEL_PRIORITY: Record<LogLevel, number> = {
-	debug: 0,
-	info: 1,
-	warn: 2,
-	error: 3,
+/**
+ * Maps custom LogLevel strings to LogMode enum values.
+ */
+const LOG_LEVEL_TO_MODE: Record<LogLevel, LogMode> = {
+	debug: LogMode.DEBUG,
+	info: LogMode.INFO,
+	warn: LogMode.WARN,
+	error: LogMode.ERROR,
 };
 
-/** Module-level log threshold, set once at startup */
-let currentLevel: LogLevel = "info";
-
 /**
- * Sets the global log level threshold.
+ * Sets the global log level threshold and configures the log engine.
  * Messages below this level are silently dropped.
  *
  * @param level - Minimum log level to output
  */
 export function setLogLevel(level: LogLevel): void {
-	currentLevel = level;
+	LogEngine.configure({
+		mode: LOG_LEVEL_TO_MODE[level],
+	});
 }
 
 /**
@@ -38,22 +42,18 @@ export function setLogLevel(level: LogLevel): void {
 export function createLogger(namespace: string) {
 	const prefix = `[${namespace}]`;
 
-	function shouldLog(level: LogLevel): boolean {
-		return LOG_LEVEL_PRIORITY[level] >= LOG_LEVEL_PRIORITY[currentLevel];
-	}
-
 	return {
 		debug: (...args: unknown[]) => {
-			if (shouldLog("debug")) console.debug(prefix, ...args);
+			LogEngine.debug(prefix, { args });
 		},
 		info: (...args: unknown[]) => {
-			if (shouldLog("info")) console.info(prefix, ...args);
+			LogEngine.info(prefix, { args });
 		},
 		warn: (...args: unknown[]) => {
-			if (shouldLog("warn")) console.warn(prefix, ...args);
+			LogEngine.warn(prefix, { args });
 		},
 		error: (...args: unknown[]) => {
-			if (shouldLog("error")) console.error(prefix, ...args);
+			LogEngine.error(prefix, { args });
 		},
 	};
 }
