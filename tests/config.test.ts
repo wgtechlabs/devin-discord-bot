@@ -17,6 +17,7 @@ import {
 	POLL_INTERVAL_NORMAL,
 	THREAD_AUTO_ARCHIVE_DURATION,
 	THREAD_NAME_MAX_LENGTH,
+	VALID_DEVIN_MODES,
 	getEmbedFooterText,
 } from "../src/config.js";
 
@@ -128,6 +129,54 @@ describe("loadConfig", () => {
 		}
 	});
 
+	test("defaults devinMode to normal when DEVIN_MODE is not set", () => {
+		const original = process.env.DEVIN_MODE;
+		// biome-ignore lint/performance/noDelete: Test requires unsetting env var.
+		delete process.env.DEVIN_MODE;
+
+		const config = loadConfig();
+		expect(config.devinMode).toBe("normal");
+
+		if (original === undefined) {
+			// biome-ignore lint/performance/noDelete: Restore env var to unset state.
+			delete process.env.DEVIN_MODE;
+		} else {
+			process.env.DEVIN_MODE = original;
+		}
+	});
+
+	test("accepts valid DEVIN_MODE values", () => {
+		const original = process.env.DEVIN_MODE;
+
+		for (const mode of ["normal", "fast", "lite", "ultra"]) {
+			process.env.DEVIN_MODE = mode;
+			const config = loadConfig();
+			expect(config.devinMode).toBe(mode);
+		}
+
+		if (original === undefined) {
+			// biome-ignore lint/performance/noDelete: Restore env var to unset state.
+			delete process.env.DEVIN_MODE;
+		} else {
+			process.env.DEVIN_MODE = original;
+		}
+	});
+
+	test("falls back to normal for invalid DEVIN_MODE values", () => {
+		const original = process.env.DEVIN_MODE;
+		process.env.DEVIN_MODE = "turbo";
+
+		const config = loadConfig();
+		expect(config.devinMode).toBe("normal");
+
+		if (original === undefined) {
+			// biome-ignore lint/performance/noDelete: Restore env var to unset state.
+			delete process.env.DEVIN_MODE;
+		} else {
+			process.env.DEVIN_MODE = original;
+		}
+	});
+
 	test("requires DEVIN_ORG_ID for cog_ keys", () => {
 		const originalApiKey = process.env.DEVIN_API_KEY;
 		const originalOrgId = process.env.DEVIN_ORG_ID;
@@ -196,5 +245,13 @@ describe("config constants", () => {
 
 	test("API base URL points to Devin", () => {
 		expect(DEVIN_API_BASE_URL).toBe("https://api.devin.ai/v1");
+	});
+
+	test("VALID_DEVIN_MODES contains exactly the four allowed modes", () => {
+		expect(VALID_DEVIN_MODES.has("normal")).toBe(true);
+		expect(VALID_DEVIN_MODES.has("fast")).toBe(true);
+		expect(VALID_DEVIN_MODES.has("lite")).toBe(true);
+		expect(VALID_DEVIN_MODES.has("ultra")).toBe(true);
+		expect(VALID_DEVIN_MODES.size).toBe(4);
 	});
 });

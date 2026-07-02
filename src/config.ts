@@ -6,7 +6,7 @@
  * error message if any required variable is missing.
  */
 
-import type { BotConfig, LogLevel } from "./types/index.js";
+import type { BotConfig, LogLevel, DevinMode } from "./types/index.js";
 
 /** Discord embed colors mapped to session status categories */
 export const EMBED_COLORS = {
@@ -57,6 +57,9 @@ export const DEVIN_API_BASE_URL = "https://api.devin.ai/v1";
 /** Valid log level values for runtime validation */
 const VALID_LOG_LEVELS = new Set<string>(["debug", "info", "warn", "error"]);
 
+/** Valid devin_mode values for runtime validation */
+export const VALID_DEVIN_MODES = new Set<string>(["normal", "fast", "lite", "ultra"]);
+
 /**
  * Loads and validates all required environment variables.
  *
@@ -73,6 +76,7 @@ export function loadConfig(): BotConfig {
 	const devinOrgId = process.env.DEVIN_ORG_ID?.trim();
 	const rawLogLevel = process.env.LOG_LEVEL ?? "info";
 	const rawBotName = process.env.BOT_NAME ?? "Devin";
+	const rawDevinMode = process.env.DEVIN_MODE ?? "normal";
 
 	if (!discordBotToken) missing.push("DISCORD_BOT_TOKEN");
 	if (!discordClientId) missing.push("DISCORD_CLIENT_ID");
@@ -87,6 +91,8 @@ export function loadConfig(): BotConfig {
 
 	const logLevel: LogLevel = VALID_LOG_LEVELS.has(rawLogLevel) ? (rawLogLevel as LogLevel) : "info";
 	const botName = rawBotName.trim().slice(0, BOT_NAME_MAX_LENGTH) || "Devin";
+	// ponytail: invalid DEVIN_MODE silently falls back to "normal"; same pattern as LOG_LEVEL
+	const devinMode: DevinMode = VALID_DEVIN_MODES.has(rawDevinMode) ? (rawDevinMode as DevinMode) : "normal";
 
 	return {
 		discordBotToken: discordBotToken as string,
@@ -96,5 +102,6 @@ export function loadConfig(): BotConfig {
 		devinOrgId: devinOrgId || undefined,
 		logLevel,
 		botName,
+		devinMode,
 	};
 }
