@@ -71,7 +71,7 @@ export async function handleReviewButton(
 	try {
 		if (queue) {
 			const result = await queue.enqueue(interaction.user.id, prompt, (p) =>
-					createSession(config.devinApiKey, p, config.devinOrgId, config.devinMode),
+				createSession(config.devinApiKey, p, config.devinOrgId, config.devinMode),
 			);
 			sessionId = result.sessionId;
 			url = result.url;
