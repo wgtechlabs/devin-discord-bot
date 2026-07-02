@@ -75,7 +75,7 @@ export async function handleDevin(
 	if (queue) {
 		try {
 			const result = await queue.enqueue(interaction.user.id, prompt, (p) =>
-				createSession(config.devinApiKey, p, config.devinOrgId),
+					createSession(config.devinApiKey, p, config.devinOrgId, config.devinMode),
 			);
 			session_id = result.sessionId;
 			url = result.url;
@@ -91,7 +91,7 @@ export async function handleDevin(
 			throw err;
 		}
 	} else {
-		const result = await createSession(config.devinApiKey, prompt, config.devinOrgId);
+			const result = await createSession(config.devinApiKey, prompt, config.devinOrgId, config.devinMode);
 		session_id = result.session_id;
 		url = result.url;
 	}
