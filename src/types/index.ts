@@ -12,6 +12,7 @@ import type { DMChannel, TextChannel, ThreadChannel } from "discord.js";
  * Controls verbosity of console output.
  */
 export type LogLevel = "debug" | "info" | "warn" | "error";
+export type DevinMode = "normal" | "fast";
 
 /**
  * Validated environment configuration required to run the bot.
@@ -30,6 +31,8 @@ export interface BotConfig {
 	devinOrgId?: string;
 	/** Current log level threshold */
 	logLevel: LogLevel;
+	/** Operating mode for Devin behavior */
+	devinMode: DevinMode;
 	/** Customizable bot display name used in embeds and thread names */
 	botName: string;
 }

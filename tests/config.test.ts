@@ -30,6 +30,7 @@ describe("loadConfig", () => {
 		expect(config.devinApiKey).toBe("apk_test-key");
 		expect(config.devinOrgId).toBeUndefined();
 		expect(config.logLevel).toBe("error");
+		expect(config.devinMode).toBe("normal");
 	});
 
 	test("defaults bot name to Devin when BOT_NAME is not set", () => {
@@ -101,6 +102,36 @@ describe("loadConfig", () => {
 		expect(config.logLevel).toBe("info");
 
 		process.env.LOG_LEVEL = original;
+	});
+
+	test("accepts DEVIN_MODE values with surrounding whitespace", () => {
+		const original = process.env.DEVIN_MODE;
+		process.env.DEVIN_MODE = " fast ";
+
+		const config = loadConfig();
+		expect(config.devinMode).toBe("fast");
+
+		if (original === undefined) {
+			// biome-ignore lint/performance/noDelete: Restore env var to unset state.
+			delete process.env.DEVIN_MODE;
+		} else {
+			process.env.DEVIN_MODE = original;
+		}
+	});
+
+	test("defaults DEVIN_MODE to normal for invalid values", () => {
+		const original = process.env.DEVIN_MODE;
+		process.env.DEVIN_MODE = "invalid";
+
+		const config = loadConfig();
+		expect(config.devinMode).toBe("normal");
+
+		if (original === undefined) {
+			// biome-ignore lint/performance/noDelete: Restore env var to unset state.
+			delete process.env.DEVIN_MODE;
+		} else {
+			process.env.DEVIN_MODE = original;
+		}
 	});
 
 	test("uses DEVIN_ORG_ID when provided", () => {
