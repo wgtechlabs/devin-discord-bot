@@ -31,6 +31,7 @@ describe("loadConfig", () => {
 		expect(config.devinApiKey).toBe("apk_test-key");
 		expect(config.devinOrgId).toBeUndefined();
 		expect(config.logLevel).toBe("error");
+		expect(config.devinMode).toBe("normal");
 	});
 
 	test("defaults bot name to Devin when BOT_NAME is not set", () => {
@@ -96,12 +97,19 @@ describe("loadConfig", () => {
 
 	test("defaults log level to info for invalid values", () => {
 		const original = process.env.LOG_LEVEL;
-		process.env.LOG_LEVEL = "invalid";
+		try {
+			process.env.LOG_LEVEL = "invalid";
 
-		const config = loadConfig();
-		expect(config.logLevel).toBe("info");
-
-		process.env.LOG_LEVEL = original;
+			const config = loadConfig();
+			expect(config.logLevel).toBe("info");
+		} finally {
+			if (original === undefined) {
+				// biome-ignore lint/performance/noDelete: Restore env var to unset state.
+				delete process.env.LOG_LEVEL;
+			} else {
+				process.env.LOG_LEVEL = original;
+			}
+		}
 	});
 
 	test("uses DEVIN_ORG_ID when provided", () => {
@@ -164,31 +172,35 @@ describe("loadConfig", () => {
 
 	test("trims DEVIN_MODE before validation", () => {
 		const original = process.env.DEVIN_MODE;
-		process.env.DEVIN_MODE = " fast ";
+		try {
+			process.env.DEVIN_MODE = " fast ";
 
-		const config = loadConfig();
-		expect(config.devinMode).toBe("fast");
-
-		if (original === undefined) {
-			// biome-ignore lint/performance/noDelete: Restore env var to unset state.
-			delete process.env.DEVIN_MODE;
-		} else {
-			process.env.DEVIN_MODE = original;
+			const config = loadConfig();
+			expect(config.devinMode).toBe("fast");
+		} finally {
+			if (original === undefined) {
+				// biome-ignore lint/performance/noDelete: Restore env var to unset state.
+				delete process.env.DEVIN_MODE;
+			} else {
+				process.env.DEVIN_MODE = original;
+			}
 		}
 	});
 
 	test("falls back to normal for invalid DEVIN_MODE values", () => {
 		const original = process.env.DEVIN_MODE;
-		process.env.DEVIN_MODE = "turbo";
+		try {
+			process.env.DEVIN_MODE = "turbo";
 
-		const config = loadConfig();
-		expect(config.devinMode).toBe("normal");
-
-		if (original === undefined) {
-			// biome-ignore lint/performance/noDelete: Restore env var to unset state.
-			delete process.env.DEVIN_MODE;
-		} else {
-			process.env.DEVIN_MODE = original;
+			const config = loadConfig();
+			expect(config.devinMode).toBe("normal");
+		} finally {
+			if (original === undefined) {
+				// biome-ignore lint/performance/noDelete: Restore env var to unset state.
+				delete process.env.DEVIN_MODE;
+			} else {
+				process.env.DEVIN_MODE = original;
+			}
 		}
 	});
 

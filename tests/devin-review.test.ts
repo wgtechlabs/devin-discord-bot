@@ -10,6 +10,7 @@ const config: BotConfig = {
 	databaseUrl: "postgres://postgres:postgres@localhost:5432/devin_test",
 	devinApiKey: "apk_test-key",
 	logLevel: "error",
+	devinMode: "normal",
 	botName: "Devin",
 };
 
