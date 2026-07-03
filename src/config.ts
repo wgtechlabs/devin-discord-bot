@@ -73,7 +73,7 @@ export function loadConfig(): BotConfig {
 	const databaseUrl = process.env.DATABASE_URL;
 	const devinApiKey = process.env.DEVIN_API_KEY;
 	const devinOrgId = process.env.DEVIN_ORG_ID?.trim();
-	const rawLogLevel = process.env.LOG_LEVEL ?? "info";
+	const rawLogLevel = (process.env.LOG_LEVEL ?? "info").trim();
 	const rawDevinMode = process.env.DEVIN_MODE ?? "normal";
 	const rawBotName = process.env.BOT_NAME ?? "Devin";
 
