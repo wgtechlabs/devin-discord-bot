@@ -7,7 +7,7 @@
  */
 
 import { DEVIN_API_BASE_URL } from "../config.js";
-import type { DevinCreateSessionResponse, DevinSessionState } from "../types/index.js";
+import type { DevinCreateSessionResponse, DevinMode, DevinSessionState } from "../types/index.js";
 import { createLogger } from "./logger.js";
 
 const log = createLogger("DevinAPI");
@@ -85,10 +85,17 @@ export async function createSession(
 	apiKey: string,
 	prompt: string,
 	orgId?: string,
+	devinMode?: DevinMode,
 ): Promise<DevinCreateSessionResponse> {
 	log.info("Creating session with prompt:", prompt.slice(0, 100));
+	const version = getApiVersion(apiKey);
 	const baseUrl = resolveBaseUrl(apiKey, orgId);
 	const createUrl = `${baseUrl}/sessions`;
+
+	const body: Record<string, string> = { prompt };
+	if (version === "v3" && devinMode) {
+		body.devin_mode = devinMode;
+	}
 
 	const response = await fetch(createUrl, {
 		method: "POST",
@@ -96,7 +103,7 @@ export async function createSession(
 			Authorization: `Bearer ${apiKey}`,
 			"Content-Type": "application/json",
 		},
-		body: JSON.stringify({ prompt }),
+		body: JSON.stringify(body),
 	});
 
 	if (!response.ok) {
