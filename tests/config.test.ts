@@ -162,6 +162,21 @@ describe("loadConfig", () => {
 		}
 	});
 
+	test("trims DEVIN_MODE before validation", () => {
+		const original = process.env.DEVIN_MODE;
+		process.env.DEVIN_MODE = " fast ";
+
+		const config = loadConfig();
+		expect(config.devinMode).toBe("fast");
+
+		if (original === undefined) {
+			// biome-ignore lint/performance/noDelete: Restore env var to unset state.
+			delete process.env.DEVIN_MODE;
+		} else {
+			process.env.DEVIN_MODE = original;
+		}
+	});
+
 	test("falls back to normal for invalid DEVIN_MODE values", () => {
 		const original = process.env.DEVIN_MODE;
 		process.env.DEVIN_MODE = "turbo";
