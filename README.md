@@ -82,6 +82,9 @@ DEVIN_API_KEY=apk_your_api_key
 # Required when DEVIN_API_KEY starts with cog_ (service-user v3 keys)
 # DEVIN_ORG_ID=org_your_org_id
 
+# Optional — session compute tier for v3 keys (normal, fast, lite, ultra)
+# DEVIN_MODE=normal
+
 # Optional — customize the bot's display name in embeds and thread names
 # BOT_NAME=Devin
 ```

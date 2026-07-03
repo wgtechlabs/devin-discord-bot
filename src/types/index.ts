@@ -12,6 +12,11 @@ import type { DMChannel, TextChannel, ThreadChannel } from "discord.js";
  * Controls verbosity of console output.
  */
 export type LogLevel = "debug" | "info" | "warn" | "error";
+
+/**
+ * Devin session execution mode (v3 API only).
+ * Controls the compute tier used when creating a session.
+ */
 export type DevinMode = "normal" | "fast" | "lite" | "ultra";
 
 /**
@@ -31,10 +36,10 @@ export interface BotConfig {
 	devinOrgId?: string;
 	/** Current log level threshold */
 	logLevel: LogLevel;
-	/** Operating mode for Devin behavior */
-	devinMode: DevinMode;
 	/** Customizable bot display name used in embeds and thread names */
 	botName: string;
+	/** Devin session mode for v3 API keys; ignored for v1 keys */
+	devinMode: DevinMode;
 }
 
 /**

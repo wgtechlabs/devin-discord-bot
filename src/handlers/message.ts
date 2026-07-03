@@ -279,7 +279,7 @@ async function createDevinSession(
 	if (queue) {
 		try {
 			const result = await queue.enqueue(message.author.id, prompt, (p) =>
-				createSession(config.devinApiKey, p, config.devinOrgId),
+				createSession(config.devinApiKey, p, config.devinOrgId, config.devinMode),
 			);
 			return { sessionId: result.sessionId, url: result.url };
 		} catch (err) {
@@ -291,7 +291,12 @@ async function createDevinSession(
 		}
 	}
 
-	const result = await createSession(config.devinApiKey, prompt, config.devinOrgId);
+	const result = await createSession(
+		config.devinApiKey,
+		prompt,
+		config.devinOrgId,
+		config.devinMode,
+	);
 	return { sessionId: result.session_id, url: result.url };
 }
 
