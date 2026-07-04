@@ -15,6 +15,7 @@ import {
 	handleTemplateSubmit,
 } from "../commands/index.js";
 import type { AllowlistStore } from "../services/allowlist-store.js";
+import { getDevinErrorFeedback } from "../services/devin-api.js";
 import { createLogger } from "../services/logger.js";
 import type { SessionManager } from "../services/session-manager.js";
 import type { BotConfig } from "../types/index.js";
@@ -64,8 +65,9 @@ export function createInteractionHandler(
 		} catch (err) {
 			log.error("Interaction error:", err);
 
+			const feedback = getDevinErrorFeedback(err, "session_start");
 			const reply = {
-				content: "Something went wrong. Please try again later.",
+				content: feedback ?? "Something went wrong. Please try again later.",
 				ephemeral: true,
 			};
 
