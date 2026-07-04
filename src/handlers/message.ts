@@ -25,6 +25,7 @@ import { EMBED_COLORS, THREAD_AUTO_ARCHIVE_DURATION, THREAD_NAME_MAX_LENGTH } fr
 import type { AllowlistStore } from "../services/allowlist-store.js";
 import {
 	createSession,
+	getDevinErrorFeedback,
 	sendMessage,
 	terminateSession,
 	uploadAttachment,
@@ -146,6 +147,11 @@ export function createMessageHandler(
 			}
 		} catch (err) {
 			log.error("Message handling error:", err);
+			const feedback = getDevinErrorFeedback(err, "session_start");
+			if (feedback) {
+				await message.reply(feedback).catch(() => {});
+				return;
+			}
 			await message.react("\u26A0\uFE0F").catch(() => {});
 		}
 	};
@@ -234,11 +240,16 @@ async function handleSessionMessage(
 		await sendMessage(config.devinApiKey, sessionId, fullMessage, config.devinOrgId);
 	} catch (err) {
 		log.error("Failed to forward message to Devin:", err);
+		const feedback = getDevinErrorFeedback(err, "message_forward");
 		if (opts.checkOwnership) {
-			await message.react("\u26A0\uFE0F").catch(() => {});
+			if (feedback) {
+				await message.reply(feedback).catch(() => {});
+			} else {
+				await message.react("\u26A0\uFE0F").catch(() => {});
+			}
 		} else {
 			await message
-				.reply("Failed to send your message to Devin. Please try again.")
+				.reply(feedback ?? "Failed to send your message to Devin. Please try again.")
 				.catch(() => {});
 		}
 	} finally {
@@ -279,7 +290,7 @@ async function createDevinSession(
 	if (queue) {
 		try {
 			const result = await queue.enqueue(message.author.id, prompt, (p) =>
-				createSession(config.devinApiKey, p, config.devinOrgId),
+				createSession(config.devinApiKey, p, config.devinOrgId, config.devinMode),
 			);
 			return { sessionId: result.sessionId, url: result.url };
 		} catch (err) {
@@ -291,7 +302,12 @@ async function createDevinSession(
 		}
 	}
 
-	const result = await createSession(config.devinApiKey, prompt, config.devinOrgId);
+	const result = await createSession(
+		config.devinApiKey,
+		prompt,
+		config.devinOrgId,
+		config.devinMode,
+	);
 	return { sessionId: result.session_id, url: result.url };
 }
 

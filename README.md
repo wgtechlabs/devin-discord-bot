@@ -7,7 +7,7 @@
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue.svg)](https://www.typescriptlang.org/)
 [![discord.js](https://img.shields.io/badge/discord.js-v14-5865F2.svg)](https://discord.js.org/)
-[![Bun](https://img.shields.io/badge/Bun-Runtime-f472b6.svg)](https://bun.sh/)
+[![Node.js](https://img.shields.io/badge/Node.js-Runtime-green.svg)](https://nodejs.org/)
 
 Devin Discord Bot is a self-hosted TypeScript integration that brings Devin AI into Discord. Start sessions with a mention or slash command, collaborate in dedicated threads with live status updates, and run tasks like PRs, tests, and bug fixes without leaving Discord.
 
@@ -48,8 +48,11 @@ Deploy your own copy and support the project. 💖
 - **Node.js** 22+ (26 recommended)
 - **Bun** 1.0+
 - A **Discord bot** ([create one](https://discord.com/developers/applications))
-  - Enable the **Message Content** privileged gateway intent
-  - Invite with permissions: Send Messages, Send Messages in Threads, Create Public Threads, Embed Links, Read Message History, Add Reactions, Use Slash Commands
+  - **OAuth2 > URL Generator**: select scopes `bot` and `applications.commands` only
+  - **Integration Type**: Guild Install
+  - **Bot permissions**: View Channels, Send Messages, Create Public Threads, Send Messages in Threads, Embed Links, Attach Files, Read Message History, Add Reactions, Use Slash Commands
+  - **Generated guild install link**: copy the URL Discord generates for you — it will look like `https://discord.com/oauth2/authorize?client_id=YOUR_CLIENT_ID&permissions=311385246784&integration_type=0&scope=bot+applications.commands`
+  - **Bot tab**: Public Bot off, Requires OAuth2 Code Grant off, Presence Intent on, Server Members Intent on, Message Content Intent on
 - A **Devin API key** (starts with `apk_`)
 - **PostgreSQL** 14+ (for persistent session state)
 
@@ -78,6 +81,9 @@ DATABASE_URL=postgres://postgres:postgres@localhost:5432/devin_discord_bot
 DEVIN_API_KEY=apk_your_api_key
 # Required when DEVIN_API_KEY starts with cog_ (service-user v3 keys)
 # DEVIN_ORG_ID=org_your_org_id
+
+# Optional — session compute tier for v3 keys (normal, fast, lite, ultra)
+# DEVIN_MODE=normal
 
 # Optional — customize the bot's display name in embeds and thread names
 # BOT_NAME=Devin

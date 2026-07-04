@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<style>
+  :root {
+    --discord-blurple: #5865f2;
+    --discord-blurple-dark: #4752c4;
+    --discord-fuchsia: #eb459e;
+    --discord-white: #ffffff;
+    --bg-primary: #0b0d10;
+    --bg-card: #1a1d24;
+    --text-primary: #f2f3f5;
+    --text-secondary: #b5bac1;
+    --text-muted: #80848e;
+    --border-color: #2a2d35;
+    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    width: 1200px;
+    height: 630px;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Subtle blurple radial glow, same as landing page hero */
+  .glow {
+    position: absolute;
+    top: -260px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 900px;
+    height: 900px;
+    background: radial-gradient(circle, rgba(88, 101, 242, 0.18) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  /* Secondary fuchsia glow bottom-right for depth */
+  .glow-alt {
+    position: absolute;
+    bottom: -300px;
+    right: -120px;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(235, 69, 158, 0.10) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  /* Thin inner border frame, like the landing page cards */
+  .frame {
+    position: absolute;
+    inset: 24px;
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    pointer-events: none;
+  }
+
+  .wrap {
+    position: relative;
+    z-index: 1;
+    height: 100%;
+    padding: 72px 80px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  /* ---- Logo row ---- */
+  .logo-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .logo-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+  }
+
+  .logo-text {
+    font-weight: 700;
+    font-size: 1.6rem;
+    color: var(--text-primary);
+    line-height: 1;
+  }
+
+  .logo-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    background: var(--discord-blurple);
+    color: var(--discord-white);
+    font-size: 0.9rem;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: 0.02em;
+    border-radius: 6px;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12) inset;
+  }
+
+  .badge-icon { width: 14px; height: 14px; flex-shrink: 0; }
+
+  /* ---- Hero text ---- */
+  .hero-title {
+    font-size: 4rem;
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin-top: 8px;
+  }
+
+  .highlight {
+    background: linear-gradient(135deg, var(--discord-blurple), var(--discord-fuchsia));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero-subtitle {
+    font-size: 1.5rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin-top: 22px;
+    max-width: 880px;
+  }
+
+  /* ---- Feature pills ---- */
+  .pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 32px;
+  }
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 18px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 100px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+
+  .pill-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--discord-blurple);
+    flex-shrink: 0;
+  }
+
+  .pill-dot.fuchsia { background: var(--discord-fuchsia); }
+  .pill-dot.green { background: #57f287; }
+  .pill-dot.yellow { background: #fee75c; }
+
+  /* ---- Footer ---- */
+  .footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 28px;
+    border-top: 1px solid var(--border-color);
+  }
+
+  .footer-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-muted);
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  .footer-brand img {
+    width: 28px;
+    height: 28px;
+  }
+
+  .footer-tag {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+  }
+
+  .footer-tag .sep {
+    margin: 0 10px;
+    opacity: 0.5;
+  }
+</style>
+</head>
+<body>
+  <div class="glow"></div>
+  <div class="glow-alt"></div>
+  <div class="frame"></div>
+
+  <div class="wrap">
+    <div>
+      <div class="logo-row">
+        <img src="devin_icon.png" alt="Devin" class="logo-icon" />
+        <span class="logo-text">Devin AI</span>
+        <span class="logo-badge">
+          <svg class="badge-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z"/></svg>
+          Discord Bot
+        </span>
+      </div>
+
+      <h1 class="hero-title">Bring <span class="highlight">Devin AI</span><br />to your Discord Server</h1>
+      <p class="hero-subtitle">Launch coding sessions with a mention or slash command, collaborate in dedicated threads, and handle PRs, tests, and bug fixes without leaving your channels.</p>
+
+      <div class="pills">
+        <span class="pill"><span class="pill-dot"></span>Slash Commands</span>
+        <span class="pill"><span class="pill-dot fuchsia"></span>Threaded Conversations</span>
+        <span class="pill"><span class="pill-dot green"></span>Live Status Updates</span>
+        <span class="pill"><span class="pill-dot yellow"></span>Template System</span>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div class="footer-brand">
+        <img src="wgtechlabs_icon.svg" alt="WG Tech Labs" />
+        <span>@wgtechlabs</span>
+      </div>
+      <div class="footer-tag">
+        Open Source<span class="sep">·</span>Self-Hosted<span class="sep">·</span>TypeScript
+      </div>
+    </div>
+  </div>
+</body>
+</html>

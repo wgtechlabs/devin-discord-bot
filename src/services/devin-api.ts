@@ -7,7 +7,7 @@
  */
 
 import { DEVIN_API_BASE_URL } from "../config.js";
-import type { DevinCreateSessionResponse, DevinSessionState } from "../types/index.js";
+import type { DevinCreateSessionResponse, DevinMode, DevinSessionState } from "../types/index.js";
 import { createLogger } from "./logger.js";
 
 const log = createLogger("DevinAPI");
@@ -33,6 +33,45 @@ interface V3MessagesResponse {
 	}>;
 	has_next_page?: boolean;
 	end_cursor?: string | null;
+}
+
+type DevinErrorContext = "session_start" | "message_forward";
+
+const DEVIN_API_ERROR_PREFIX = "Devin API error";
+const DEVIN_USAGE_LIMIT_PATTERN = /\b(rate limit|usage limit|quota|too many requests)\b/i;
+
+function extractErrorMessage(error: unknown): string {
+	return error instanceof Error ? error.message : String(error ?? "");
+}
+
+function extractHttpStatus(message: string): number | null {
+	const match = message.match(/\b([1-5]\d{2})\b/);
+	if (!match) return null;
+	const parsed = Number(match[1]);
+	return Number.isFinite(parsed) ? parsed : null;
+}
+
+/**
+ * Builds a short user-facing message for known Devin API failures.
+ * Returns null when the error does not appear to come from Devin API calls.
+ */
+export function getDevinErrorFeedback(error: unknown, context: DevinErrorContext): string | null {
+	const message = extractErrorMessage(error);
+	const status = extractHttpStatus(message);
+	const isDevinApiError = message.startsWith(DEVIN_API_ERROR_PREFIX);
+	if (!isDevinApiError) return null;
+	// ponytail: keyword fallback covers current free-form error bodies; switch to typed API codes when available
+	const isUsageLimit = status === 429 || DEVIN_USAGE_LIMIT_PATTERN.test(message);
+
+	if (isUsageLimit) {
+		return context === "message_forward"
+			? "Devin usage limit reached. Your message wasn't sent. Please retry later or check your Devin plan limits."
+			: "Devin usage limit reached. I couldn't start a session. Please retry later or check your Devin plan limits.";
+	}
+
+	return context === "message_forward"
+		? "Couldn't send your message to Devin right now. Please try again."
+		: "Couldn't start a Devin session right now. Please try again.";
 }
 
 function getApiVersion(apiKey: string): DevinApiVersion {
@@ -85,10 +124,17 @@ export async function createSession(
 	apiKey: string,
 	prompt: string,
 	orgId?: string,
+	devinMode?: DevinMode,
 ): Promise<DevinCreateSessionResponse> {
 	log.info("Creating session with prompt:", prompt.slice(0, 100));
+	const version = getApiVersion(apiKey);
 	const baseUrl = resolveBaseUrl(apiKey, orgId);
 	const createUrl = `${baseUrl}/sessions`;
+
+	const body: Record<string, string> = { prompt };
+	if (version === "v3" && devinMode) {
+		body.devin_mode = devinMode;
+	}
 
 	const response = await fetch(createUrl, {
 		method: "POST",
@@ -96,12 +142,12 @@ export async function createSession(
 			Authorization: `Bearer ${apiKey}`,
 			"Content-Type": "application/json",
 		},
-		body: JSON.stringify({ prompt }),
+		body: JSON.stringify(body),
 	});
 
 	if (!response.ok) {
 		const body = await response.text();
-		throw new Error(`Devin API error ${response.status}: ${body}`);
+		throw new Error(`${DEVIN_API_ERROR_PREFIX} ${response.status}: ${body}`);
 	}
 
 	const data = (await response.json()) as DevinCreateSessionResponse | V3SessionResponse;
@@ -143,7 +189,7 @@ export async function sendMessage(
 
 	if (!response.ok) {
 		const body = await response.text();
-		throw new Error(`Failed to send message: ${response.status} ${body}`);
+		throw new Error(`${DEVIN_API_ERROR_PREFIX} ${response.status}: ${body}`);
 	}
 }
 
@@ -173,7 +219,7 @@ export async function getSessionState(
 
 	if (!response.ok) {
 		const body = await response.text();
-		throw new Error(`Failed to get session: ${response.status} ${body}`);
+		throw new Error(`${DEVIN_API_ERROR_PREFIX} ${response.status}: ${body}`);
 	}
 
 	if (version === "v1") {
@@ -200,7 +246,7 @@ export async function getSessionState(
 
 		if (!messagesResponse.ok) {
 			const body = await messagesResponse.text();
-			throw new Error(`Failed to list session messages: ${messagesResponse.status} ${body}`);
+			throw new Error(`${DEVIN_API_ERROR_PREFIX} ${messagesResponse.status}: ${body}`);
 		}
 
 		const messagesPage = (await messagesResponse.json()) as V3MessagesResponse;
@@ -278,7 +324,7 @@ export async function terminateSession(
 
 	if (!response.ok) {
 		const body = await response.text();
-		throw new Error(`Failed to terminate session: ${response.status} ${body}`);
+		throw new Error(`${DEVIN_API_ERROR_PREFIX} ${response.status}: ${body}`);
 	}
 }
 
@@ -314,7 +360,7 @@ export async function uploadAttachment(
 
 	if (!response.ok) {
 		const body = await response.text();
-		throw new Error(`Failed to upload attachment: ${response.status} ${body}`);
+		throw new Error(`${DEVIN_API_ERROR_PREFIX} ${response.status}: ${body}`);
 	}
 
 	const data = (await response.json()) as { url: string };

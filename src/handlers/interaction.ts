@@ -15,6 +15,7 @@ import {
 	handleTemplateSubmit,
 } from "../commands/index.js";
 import type { AllowlistStore } from "../services/allowlist-store.js";
+import { getDevinErrorFeedback } from "../services/devin-api.js";
 import { createLogger } from "../services/logger.js";
 import type { SessionManager } from "../services/session-manager.js";
 import type { BotConfig } from "../types/index.js";
@@ -35,10 +36,12 @@ export function createInteractionHandler(
 	allowlistStore: AllowlistStore,
 ) {
 	return async (interaction: Interaction): Promise<void> => {
+		let devinErrorContext: Parameters<typeof getDevinErrorFeedback>[1] = "session_start";
 		try {
 			if (interaction.isChatInputCommand() && interaction.commandName === "devin") {
 				const group = interaction.options.getSubcommandGroup(false);
 				const subcommand = interaction.options.getSubcommand(false);
+				devinErrorContext = subcommand === "reply" ? "message_forward" : "session_start";
 
 				if (group === "allowlist" && subcommand) {
 					const handler = allowlistHandlers[subcommand];
@@ -64,8 +67,9 @@ export function createInteractionHandler(
 		} catch (err) {
 			log.error("Interaction error:", err);
 
+			const feedback = getDevinErrorFeedback(err, devinErrorContext);
 			const reply = {
-				content: "Something went wrong. Please try again later.",
+				content: feedback ?? "Something went wrong. Please try again later.",
 				ephemeral: true,
 			};
 
