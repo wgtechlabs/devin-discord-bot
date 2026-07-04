@@ -48,3 +48,9 @@ Reference: https://github.com/wgtechlabs/clean-commit
 - `🚀 release: version 1.0.0`
 - `📦 new!: completely redesign authentication system`
 - `🔧 update! (api): change response format for all endpoints`
+
+## Code review response preference
+
+- Resolve merge conflicts first before addressing review comments.
+- Keep `ponytail:` inline comments when they capture intentional simplifications.
+- After code changes, reply on each open code review thread with what changed (or why kept as-is).
