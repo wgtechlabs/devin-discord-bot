@@ -11,4 +11,9 @@ describe("getDevinErrorFeedback", () => {
 		const err = new Error("database connection dropped");
 		expect(getDevinErrorFeedback(err, "session_start")).toBeNull();
 	});
+
+	test("does not misclassify non-Devin rate limit errors", () => {
+		const err = new Error("upstream quota exceeded 429");
+		expect(getDevinErrorFeedback(err, "session_start")).toBeNull();
+	});
 });

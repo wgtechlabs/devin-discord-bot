@@ -59,6 +59,7 @@ export function getDevinErrorFeedback(error: unknown, context: DevinErrorContext
 	const message = extractErrorMessage(error);
 	const status = extractHttpStatus(message);
 	const isDevinApiError = message.startsWith(DEVIN_API_ERROR_PREFIX);
+	if (!isDevinApiError) return null;
 	// ponytail: keyword fallback covers current free-form error bodies; switch to typed API codes when available
 	const isUsageLimit = status === 429 || DEVIN_USAGE_LIMIT_PATTERN.test(message);
 
@@ -67,8 +68,6 @@ export function getDevinErrorFeedback(error: unknown, context: DevinErrorContext
 			? "Devin usage limit reached. Your message wasn't sent. Please retry later or check your Devin plan limits."
 			: "Devin usage limit reached. I couldn't start a session. Please retry later or check your Devin plan limits.";
 	}
-
-	if (!isDevinApiError) return null;
 
 	return context === "message_forward"
 		? "Couldn't send your message to Devin right now. Please try again."

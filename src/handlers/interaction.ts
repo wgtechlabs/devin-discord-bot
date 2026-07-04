@@ -36,10 +36,12 @@ export function createInteractionHandler(
 	allowlistStore: AllowlistStore,
 ) {
 	return async (interaction: Interaction): Promise<void> => {
+		let devinErrorContext: Parameters<typeof getDevinErrorFeedback>[1] = "session_start";
 		try {
 			if (interaction.isChatInputCommand() && interaction.commandName === "devin") {
 				const group = interaction.options.getSubcommandGroup(false);
 				const subcommand = interaction.options.getSubcommand(false);
+				devinErrorContext = subcommand === "reply" ? "message_forward" : "session_start";
 
 				if (group === "allowlist" && subcommand) {
 					const handler = allowlistHandlers[subcommand];
@@ -65,7 +67,7 @@ export function createInteractionHandler(
 		} catch (err) {
 			log.error("Interaction error:", err);
 
-			const feedback = getDevinErrorFeedback(err, "session_start");
+			const feedback = getDevinErrorFeedback(err, devinErrorContext);
 			const reply = {
 				content: feedback ?? "Something went wrong. Please try again later.",
 				ephemeral: true,

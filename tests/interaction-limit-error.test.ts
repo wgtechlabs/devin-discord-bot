@@ -14,9 +14,11 @@ const config: BotConfig = {
 };
 
 const originalStartHandler = commandHandlers.start;
+const originalReplyHandler = commandHandlers.reply;
 
 afterEach(() => {
 	commandHandlers.start = originalStartHandler;
+	commandHandlers.reply = originalReplyHandler;
 });
 
 describe("createInteractionHandler", () => {
@@ -54,6 +56,44 @@ describe("createInteractionHandler", () => {
 		expect(reply).toHaveBeenCalledWith({
 			content:
 				"Devin usage limit reached. I couldn't start a session. Please retry later or check your Devin plan limits.",
+			ephemeral: true,
+		});
+	});
+
+	test("uses message-forward context for /devin reply failures", async () => {
+		commandHandlers.reply = (async () => {
+			throw new Error("Devin API error 429: Too many requests");
+		}) as typeof commandHandlers.reply;
+
+		const reply = mock(async () => undefined);
+
+		const interaction = {
+			commandName: "devin",
+			options: {
+				getSubcommandGroup: () => null,
+				getSubcommand: () => "reply",
+			},
+			isChatInputCommand: () => true,
+			isStringSelectMenu: () => false,
+			isModalSubmit: () => false,
+			isButton: () => false,
+			isRepliable: () => true,
+			reply,
+			deferred: false,
+			replied: false,
+		};
+
+		const handler = createInteractionHandler(
+			config,
+			{} as Parameters<typeof createInteractionHandler>[1],
+			{} as Parameters<typeof createInteractionHandler>[2],
+		);
+
+		await handler(interaction as Parameters<typeof handler>[0]);
+
+		expect(reply).toHaveBeenCalledWith({
+			content:
+				"Devin usage limit reached. Your message wasn't sent. Please retry later or check your Devin plan limits.",
 			ephemeral: true,
 		});
 	});
