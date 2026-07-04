@@ -42,6 +42,13 @@ RUN npm pack tar@7.5.16 --pack-destination /tmp && \
     tar xzf /tmp/tar-7.5.16.tgz --strip-components=1 -C /usr/local/lib/node_modules/npm/node_modules/tar && \
     rm /tmp/tar-7.5.16.tgz
 
+# Patch undici vulnerabilities in bundled npm
+RUN npm pack undici@6.27.0 --pack-destination /tmp && \
+    rm -rf /usr/local/lib/node_modules/npm/node_modules/undici && \
+    mkdir -p /usr/local/lib/node_modules/npm/node_modules/undici && \
+    tar xzf /tmp/undici-6.27.0.tgz --strip-components=1 -C /usr/local/lib/node_modules/npm/node_modules/undici && \
+    rm /tmp/undici-6.27.0.tgz
+
 # Set working directory for all subsequent stages
 WORKDIR /usr/src/app
 
