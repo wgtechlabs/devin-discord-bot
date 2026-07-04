@@ -22,6 +22,7 @@ import type { BotConfig } from "../types/index.js";
 
 const log = createLogger("Command:DevinReview");
 const clickedReviewButtons = new Set<string>();
+const REVIEW_BUTTON_LOCK_TTL_MS = 30_000;
 
 /**
  * Handles the "Review with Devin" button click on a PR embed.
@@ -56,11 +57,14 @@ export async function handleReviewButton(
 		clickedReviewButtons.delete(buttonKey);
 		throw err;
 	}
-	await interaction.message.edit({ components: [] }).catch((err) => {
+	try {
+		await interaction.message.edit({ components: [] });
+		// ponytail: key only guards the race window before the edit; Discord prevents further clicks once button is removed
+		clickedReviewButtons.delete(buttonKey);
+	} catch (err) {
 		log.warn("Failed to remove review button:", err);
-	});
-	// ponytail: key only guards the race window before the edit; Discord prevents further clicks once button is removed
-	clickedReviewButtons.delete(buttonKey);
+		setTimeout(() => clickedReviewButtons.delete(buttonKey), REVIEW_BUTTON_LOCK_TTL_MS);
+	}
 
 	const prompt = `Review this pull request: ${prUrl}`;
 	const queue = sessionManager.getQueue();

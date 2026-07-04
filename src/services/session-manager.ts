@@ -532,6 +532,10 @@ export class SessionManager {
 					clearTimeout(timeout);
 				}
 				if (!response.ok) throw new Error(`Attachment fetch failed: ${response.status}`);
+				const finalUrl = new URL(response.url);
+				if (!SessionManager.ALLOWED_ATTACHMENT_HOSTS.has(finalUrl.hostname)) {
+					throw new Error(`Blocked attachment redirect to untrusted host: ${finalUrl.hostname}`);
+				}
 
 				const contentLength = response.headers.get("content-length");
 				if (contentLength && Number(contentLength) > SessionManager.MAX_ATTACHMENT_BYTES) {
@@ -545,7 +549,7 @@ export class SessionManager {
 					throw new Error(`Attachment too large after download: ${buffer.byteLength} bytes`);
 				}
 
-				const name = decodeURIComponent(parsed.pathname.split("/").pop() || "attachment");
+				const name = decodeURIComponent(finalUrl.pathname.split("/").pop() || "attachment");
 				files.push({ attachment: buffer, name });
 			} catch (error) {
 				log.error(`Failed to fetch Devin attachment ${url}:`, error);

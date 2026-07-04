@@ -139,17 +139,19 @@ describe("loadConfig", () => {
 
 	test("defaults devinMode to normal when DEVIN_MODE is not set", () => {
 		const original = process.env.DEVIN_MODE;
-		// biome-ignore lint/performance/noDelete: Test requires unsetting env var.
-		delete process.env.DEVIN_MODE;
-
-		const config = loadConfig();
-		expect(config.devinMode).toBe("normal");
-
-		if (original === undefined) {
-			// biome-ignore lint/performance/noDelete: Restore env var to unset state.
+		try {
+			// biome-ignore lint/performance/noDelete: Test requires unsetting env var.
 			delete process.env.DEVIN_MODE;
-		} else {
-			process.env.DEVIN_MODE = original;
+
+			const config = loadConfig();
+			expect(config.devinMode).toBe("normal");
+		} finally {
+			if (original === undefined) {
+				// biome-ignore lint/performance/noDelete: Restore env var to unset state.
+				delete process.env.DEVIN_MODE;
+			} else {
+				process.env.DEVIN_MODE = original;
+			}
 		}
 	});
 
