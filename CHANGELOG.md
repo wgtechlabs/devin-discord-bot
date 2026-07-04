@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- update README banner image link and CI workflow configuration (#45)
 
 ## [0.4.0] - 2026-07-04
 
