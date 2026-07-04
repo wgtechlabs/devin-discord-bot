@@ -7,7 +7,7 @@
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue.svg)](https://www.typescriptlang.org/)
 [![discord.js](https://img.shields.io/badge/discord.js-v14-5865F2.svg)](https://discord.js.org/)
-[![Bun](https://img.shields.io/badge/Bun-Runtime-f472b6.svg)](https://bun.sh/)
+[![Node.js](https://img.shields.io/badge/Node.js-Runtime-green.svg)](https://nodejs.org/)
 
 Devin Discord Bot is a self-hosted TypeScript integration that brings Devin AI into Discord. Start sessions with a mention or slash command, collaborate in dedicated threads with live status updates, and run tasks like PRs, tests, and bug fixes without leaving Discord.
 
