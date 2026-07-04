@@ -6,7 +6,7 @@
  * error message if any required variable is missing.
  */
 
-import type { BotConfig, LogLevel, DevinMode } from "./types/index.js";
+import type { BotConfig, DevinMode, LogLevel } from "./types/index.js";
 
 /** Discord embed colors mapped to session status categories */
 export const EMBED_COLORS = {
@@ -58,7 +58,24 @@ export const DEVIN_API_BASE_URL = "https://api.devin.ai/v1";
 const VALID_LOG_LEVELS = new Set<string>(["debug", "info", "warn", "error"]);
 
 /** Valid devin_mode values for runtime validation */
-export const VALID_DEVIN_MODES = new Set<string>(["normal", "fast", "lite", "ultra"]);
+export const VALID_DEVIN_MODES: ReadonlySet<DevinMode> = new Set<DevinMode>([
+	"normal",
+	"fast",
+	"lite",
+	"ultra",
+]);
+
+function parseDevinMode(value: string): DevinMode | undefined {
+	switch (value) {
+		case "normal":
+		case "fast":
+		case "lite":
+		case "ultra":
+			return value;
+		default:
+			return undefined;
+	}
+}
 
 /**
  * Loads and validates all required environment variables.
@@ -74,9 +91,9 @@ export function loadConfig(): BotConfig {
 	const databaseUrl = process.env.DATABASE_URL;
 	const devinApiKey = process.env.DEVIN_API_KEY;
 	const devinOrgId = process.env.DEVIN_ORG_ID?.trim();
-	const rawLogLevel = process.env.LOG_LEVEL ?? "info";
+	const rawLogLevel = (process.env.LOG_LEVEL ?? "info").trim();
 	const rawBotName = process.env.BOT_NAME ?? "Devin";
-	const rawDevinMode = process.env.DEVIN_MODE ?? "normal";
+	const rawDevinMode = (process.env.DEVIN_MODE ?? "normal").trim();
 
 	if (!discordBotToken) missing.push("DISCORD_BOT_TOKEN");
 	if (!discordClientId) missing.push("DISCORD_CLIENT_ID");
@@ -92,7 +109,7 @@ export function loadConfig(): BotConfig {
 	const logLevel: LogLevel = VALID_LOG_LEVELS.has(rawLogLevel) ? (rawLogLevel as LogLevel) : "info";
 	const botName = rawBotName.trim().slice(0, BOT_NAME_MAX_LENGTH) || "Devin";
 	// ponytail: invalid DEVIN_MODE silently falls back to "normal"; same pattern as LOG_LEVEL
-	const devinMode: DevinMode = VALID_DEVIN_MODES.has(rawDevinMode) ? (rawDevinMode as DevinMode) : "normal";
+	const devinMode: DevinMode = parseDevinMode(rawDevinMode) ?? "normal";
 
 	return {
 		discordBotToken: discordBotToken as string,
