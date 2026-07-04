@@ -1,7 +1,7 @@
 
 # Devin Discord Bot
 
-[![Devin Discord Bot – GitHub Repo Banner](https://ghrb.waren.build/banner?header=Devin+Discord+Bot+%F0%9F%A4%96&subheader=Self-hosted+Discord+bot+integration+for+Devin+AI&bg=013B84-016EEA&color=FFFFFF)](https://github.com/wgtechlabs/devin-discord-bot)
+![GitHub Repo Banner](https://ghrb.waren.build/banner?header=Devin+%E2%80%94+Discord+Bot+%21%5Bdiscord%5D&subheader=Bring+your+AI+software+engineer+to+your+Discord&bg=013B84-016EEA&color=FFFFFF&headerfont=Inter&subheaderfont=Kinewave&watermarkpos=bottom-right)
 <!-- Created with GitHub Repo Banner by Waren Gonzaga: https://ghrb.waren.build -->
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
