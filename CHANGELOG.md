@@ -8,6 +8,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [0.4.0] - 2026-07-04
+
+### Added
+
+- add og-image HTML for Discord bot preview
+- add DEVIN_MODE config for v3 session compute tier (#38)
+- add og image for landing page (#33)
+
+### Changed
+
+- synchronize library versions
+- update Node.js badge in README
+- improve devin usage-limit feedback (#44)
+- address PR review feedback
+- trim and validate devin_mode (#41)
+- add DEVIN_MODE support for v3 sessions (#42)
+- disable review button after click (#35)
+- render Devin attachments in Discord (#36)
+- migrate to @wgtechlabs/log-engine (#34)
+
+### Security
+
+- patch bundled npm undici (#43)
+
 ## [0.3.0] - 2026-06-30
 
 ### Added
