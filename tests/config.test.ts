@@ -239,6 +239,33 @@ describe("loadConfig", () => {
 		}
 	});
 
+	test("rejects invalid DEVIN_MAX_SESSIONS_PER_USER values", () => {
+		const originalCap = process.env.DEVIN_MAX_SESSIONS_PER_USER;
+		const originalExit = process.exit;
+		const originalConsoleError = console.error;
+
+		try {
+			process.exit = ((code?: number) => {
+				throw new Error(`process.exit:${code ?? "undefined"}`);
+			}) as typeof process.exit;
+			console.error = (() => {}) as typeof console.error;
+
+			for (const value of ["0", "-1", "abc"]) {
+				process.env.DEVIN_MAX_SESSIONS_PER_USER = value;
+				expect(() => loadConfig()).toThrow("process.exit:1");
+			}
+		} finally {
+			process.exit = originalExit;
+			console.error = originalConsoleError;
+			if (originalCap === undefined) {
+				// biome-ignore lint/performance/noDelete: Restore env var to unset state.
+				delete process.env.DEVIN_MAX_SESSIONS_PER_USER;
+			} else {
+				process.env.DEVIN_MAX_SESSIONS_PER_USER = originalCap;
+			}
+		}
+	});
+
 	test("requires DEVIN_ORG_ID for cog_ keys", () => {
 		const originalApiKey = process.env.DEVIN_API_KEY;
 		const originalOrgId = process.env.DEVIN_ORG_ID;
