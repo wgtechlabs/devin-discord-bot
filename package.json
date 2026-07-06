@@ -13,8 +13,7 @@
 		"format": "biome format --write .",
 		"typecheck": "tsc --noEmit",
 		"test": "bun test",
-		"test:watch": "bun test --watch",
-		"prepare": "biome check ."
+		"test:watch": "bun test --watch"
 	},
 	"keywords": [
 		"discord",
