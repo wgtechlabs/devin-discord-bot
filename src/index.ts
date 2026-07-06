@@ -9,6 +9,7 @@
  */
 
 import { Client, GatewayIntentBits, Partials, REST, Routes } from "discord.js";
+import { version } from "../package.json";
 import { commands } from "./commands/index.js";
 import { loadConfig } from "./config.js";
 import { createInteractionHandler } from "./handlers/interaction.js";
@@ -50,7 +51,7 @@ sessionManager.setQueue(sessionQueue);
 
 /** Register slash commands when the bot connects */
 client.once("ready", async () => {
-	log.info(`Logged in as ${client.user?.tag}`);
+	log.info(`Logged in as ${client.user?.tag} (v${version})`);
 
 	const rest = new REST().setToken(config.discordBotToken);
 

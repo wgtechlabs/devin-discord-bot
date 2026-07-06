@@ -106,6 +106,7 @@ export const commands = [
 					sub.setName("list").setDescription("List all users on the DM allowlist"),
 				),
 		),
+	new SlashCommandBuilder().setName("version").setDescription("Show the current bot version"),
 ];
 
 /**
@@ -155,3 +156,5 @@ export {
 } from "./devin-template.js";
 
 export { handleReviewButton } from "./devin-review.js";
+
+export { handleVersion } from "./version.js";
