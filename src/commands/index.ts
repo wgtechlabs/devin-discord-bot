@@ -1,8 +1,8 @@
 /**
  * Command registry and routing.
  *
- * Defines the unified `/devin` slash command with subcommands and
- * provides a lookup map for dispatching interactions to the correct
+ * Defines top-level slash commands (`/devin`, `/version`) and
+ * provides lookup maps for dispatching interactions to the correct
  * handler function.
  */
 
@@ -23,8 +23,9 @@ import { handleDevinTemplate } from "./devin-template.js";
 import { handleDevin } from "./devin.js";
 
 /**
- * Unified `/devin` slash command with subcommands.
- * All bot interactions are grouped under a single top-level command.
+ * Slash command definitions:
+ * - `/devin` with subcommands
+ * - `/version` as a standalone command
  */
 export const commands = [
 	new SlashCommandBuilder()
@@ -106,6 +107,7 @@ export const commands = [
 					sub.setName("list").setDescription("List all users on the DM allowlist"),
 				),
 		),
+	new SlashCommandBuilder().setName("version").setDescription("Show the current bot version"),
 ];
 
 /**
@@ -155,3 +157,5 @@ export {
 } from "./devin-template.js";
 
 export { handleReviewButton } from "./devin-review.js";
+
+export { handleVersion } from "./version.js";
