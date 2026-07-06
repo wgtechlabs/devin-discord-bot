@@ -10,6 +10,7 @@ import type { ChatInputCommandInteraction } from "discord.js";
 import { sendMessage, uploadAttachment } from "../services/devin-api.js";
 import { createLogger } from "../services/logger.js";
 import type { SessionManager } from "../services/session-manager.js";
+import { TERMINAL_STATUSES } from "../types/index.js";
 import type { BotConfig } from "../types/index.js";
 
 const log = createLogger("Command:DevinReply");
@@ -39,9 +40,25 @@ export async function handleDevinReply(
 	}
 
 	const tracked = sessionManager.getTracked(sessionId);
-	if (explicitId && tracked && tracked.userId !== interaction.user.id) {
+	if (!tracked) {
+		await interaction.reply({
+			content: "Session not active. Start a new session and try again.",
+			ephemeral: true,
+		});
+		return;
+	}
+
+	if (explicitId && tracked.userId !== interaction.user.id) {
 		await interaction.reply({
 			content: "You can only send messages to sessions that you started.",
+			ephemeral: true,
+		});
+		return;
+	}
+
+	if (TERMINAL_STATUSES.has(tracked.lastStatus)) {
+		await interaction.reply({
+			content: "This session is closed. Start a new session to continue.",
 			ephemeral: true,
 		});
 		return;
@@ -65,7 +82,9 @@ export async function handleDevinReply(
 			);
 			message += `\nATTACHMENT:"${fileUrl}"`;
 		} catch (err) {
-			log.error("Attachment upload failed:", err);
+			log.error("Attachment processing failed:", err);
+			await interaction.editReply("Failed to upload attachment. Message was not sent.");
+			return;
 		}
 	}
 
