@@ -40,7 +40,14 @@ const client = new Client({
 
 /** Initialize rate limiter and session queue */
 const rateLimiter = new RateLimiter(DEFAULT_RATE_LIMIT_CONFIG);
-const sessionQueue = new SessionQueue({}, rateLimiter);
+const sessionQueue = new SessionQueue(
+	{
+		...(config.maxSessionsPerUser !== undefined
+			? { maxSessionsPerUser: config.maxSessionsPerUser }
+			: {}),
+	},
+	rateLimiter,
+);
 
 /** Initialize session manager, allowlist store, and inject config */
 const stateStore = new SessionStateStore(config.databaseUrl);

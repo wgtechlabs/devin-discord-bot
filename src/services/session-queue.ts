@@ -41,7 +41,7 @@ export interface SessionQueueConfig {
 
 export const DEFAULT_QUEUE_CONFIG: SessionQueueConfig = {
 	maxConcurrentSessions: 5,
-	maxSessionsPerUser: 2,
+	maxSessionsPerUser: Number.POSITIVE_INFINITY,
 	maxQueueSize: 20,
 	queueTimeout: 300_000,
 };
@@ -50,8 +50,8 @@ export const DEFAULT_QUEUE_CONFIG: SessionQueueConfig = {
  * Manages session creation with concurrency limits and fair queuing.
  *
  * When the system is at capacity, new requests are queued and
- * processed in FIFO order as slots become available. Per-user
- * limits prevent a single user from consuming all slots.
+ * processed in FIFO order as slots become available. An optional
+ * per-user cap can prevent a single user from consuming all slots.
  */
 export class SessionQueue {
 	private readonly config: SessionQueueConfig;
