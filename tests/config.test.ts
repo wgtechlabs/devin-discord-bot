@@ -206,6 +206,66 @@ describe("loadConfig", () => {
 		}
 	});
 
+	test("leaves per-user session cap disabled when env var is not set", () => {
+		const original = process.env.DEVIN_MAX_SESSIONS_PER_USER;
+		try {
+			// biome-ignore lint/performance/noDelete: Test requires unsetting env var.
+			delete process.env.DEVIN_MAX_SESSIONS_PER_USER;
+			const config = loadConfig();
+			expect(config.maxSessionsPerUser).toBeUndefined();
+		} finally {
+			if (original === undefined) {
+				// biome-ignore lint/performance/noDelete: Restore env var to unset state.
+				delete process.env.DEVIN_MAX_SESSIONS_PER_USER;
+			} else {
+				process.env.DEVIN_MAX_SESSIONS_PER_USER = original;
+			}
+		}
+	});
+
+	test("uses DEVIN_MAX_SESSIONS_PER_USER when provided", () => {
+		const original = process.env.DEVIN_MAX_SESSIONS_PER_USER;
+		try {
+			process.env.DEVIN_MAX_SESSIONS_PER_USER = "3";
+			const config = loadConfig();
+			expect(config.maxSessionsPerUser).toBe(3);
+		} finally {
+			if (original === undefined) {
+				// biome-ignore lint/performance/noDelete: Restore env var to unset state.
+				delete process.env.DEVIN_MAX_SESSIONS_PER_USER;
+			} else {
+				process.env.DEVIN_MAX_SESSIONS_PER_USER = original;
+			}
+		}
+	});
+
+	test("rejects invalid DEVIN_MAX_SESSIONS_PER_USER values", () => {
+		const originalCap = process.env.DEVIN_MAX_SESSIONS_PER_USER;
+		const originalExit = process.exit;
+		const originalConsoleError = console.error;
+
+		try {
+			process.exit = ((code?: number) => {
+				throw new Error(`process.exit:${code ?? "undefined"}`);
+			}) as typeof process.exit;
+			console.error = (() => {}) as typeof console.error;
+
+			for (const value of ["0", "-1", "abc"]) {
+				process.env.DEVIN_MAX_SESSIONS_PER_USER = value;
+				expect(() => loadConfig()).toThrow("process.exit:1");
+			}
+		} finally {
+			process.exit = originalExit;
+			console.error = originalConsoleError;
+			if (originalCap === undefined) {
+				// biome-ignore lint/performance/noDelete: Restore env var to unset state.
+				delete process.env.DEVIN_MAX_SESSIONS_PER_USER;
+			} else {
+				process.env.DEVIN_MAX_SESSIONS_PER_USER = originalCap;
+			}
+		}
+	});
+
 	test("requires DEVIN_ORG_ID for cog_ keys", () => {
 		const originalApiKey = process.env.DEVIN_API_KEY;
 		const originalOrgId = process.env.DEVIN_ORG_ID;

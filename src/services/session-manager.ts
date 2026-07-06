@@ -32,6 +32,7 @@ import type {
 	TrackedSession,
 } from "../types/index.js";
 import { TERMINAL_STATUSES } from "../types/index.js";
+import type { BotSettingsStore } from "./bot-settings-store.js";
 import { getSessionState } from "./devin-api.js";
 import { formatMarkdownForDiscord } from "./discord-markdown.js";
 import { createLogger } from "./logger.js";
@@ -112,14 +113,19 @@ export class SessionManager {
 	private config: BotConfig | null = null;
 	/** Session queue for concurrency control */
 	private queue: SessionQueue | null = null;
+	/** Mutable Devin mode (DB override if configured, otherwise env default) */
+	private runtimeDevinMode: BotConfig["devinMode"] | null = null;
 	/** Local state store for restart recovery snapshots */
 	private readonly stateStore: SessionStateStore;
+	/** Optional runtime settings store */
+	private readonly settingsStore: BotSettingsStore | null;
 	/** Serialize state writes to prevent out-of-order snapshot overwrites */
 	private persistChain: Promise<void> = Promise.resolve();
 
-	constructor(client: Client, stateStore: SessionStateStore) {
+	constructor(client: Client, stateStore: SessionStateStore, settingsStore?: BotSettingsStore) {
 		this.client = client;
 		this.stateStore = stateStore;
+		this.settingsStore = settingsStore ?? null;
 	}
 
 	/**
@@ -130,6 +136,46 @@ export class SessionManager {
 	 */
 	setConfig(config: BotConfig): void {
 		this.config = config;
+		if (!this.runtimeDevinMode) {
+			this.runtimeDevinMode = config.devinMode;
+		}
+	}
+
+	getDevinMode(): BotConfig["devinMode"] {
+		return this.runtimeDevinMode ?? this.config?.devinMode ?? "normal";
+	}
+
+	async setDevinMode(mode: BotConfig["devinMode"]): Promise<void> {
+		this.runtimeDevinMode = mode;
+		await this.settingsStore?.setDevinMode(mode);
+	}
+
+	getSessionCaps(): {
+		maxConcurrentSessions: number | undefined;
+		maxSessionsPerUser: number | undefined;
+	} {
+		const limits = this.queue?.getLimits();
+		return {
+			maxConcurrentSessions:
+				limits?.maxConcurrentSessions === Number.POSITIVE_INFINITY
+					? undefined
+					: limits?.maxConcurrentSessions,
+			maxSessionsPerUser:
+				limits?.maxSessionsPerUser === Number.POSITIVE_INFINITY
+					? undefined
+					: (limits?.maxSessionsPerUser ?? this.config?.maxSessionsPerUser),
+		};
+	}
+
+	async setSessionCaps(caps: {
+		maxConcurrentSessions: number | undefined;
+		maxSessionsPerUser: number | undefined;
+	}): Promise<void> {
+		this.queue?.setLimits({
+			maxConcurrentSessions: caps.maxConcurrentSessions ?? Number.POSITIVE_INFINITY,
+			maxSessionsPerUser: caps.maxSessionsPerUser ?? Number.POSITIVE_INFINITY,
+		});
+		await this.settingsStore?.setSessionCaps(caps);
 	}
 
 	/**
@@ -145,6 +191,7 @@ export class SessionManager {
 	 * Restores tracked sessions from persisted state and resumes polling.
 	 */
 	async restoreFromState(): Promise<void> {
+		await this.restoreRuntimeSettings();
 		const persisted = await this.stateStore.load();
 		if (persisted.length === 0) return;
 
@@ -198,6 +245,23 @@ export class SessionManager {
 		}
 
 		await this.persistState();
+	}
+
+	private async restoreRuntimeSettings(): Promise<void> {
+		const defaultMode = this.config?.devinMode;
+		if (!defaultMode) return;
+		if (!this.settingsStore) {
+			this.runtimeDevinMode = defaultMode;
+			return;
+		}
+
+		const persistedMode = await this.settingsStore.getDevinMode();
+		const persistedCaps = await this.settingsStore.getSessionCaps();
+		this.runtimeDevinMode = persistedMode ?? defaultMode;
+		this.queue?.setLimits({
+			maxConcurrentSessions: persistedCaps.maxConcurrentSessions ?? Number.POSITIVE_INFINITY,
+			maxSessionsPerUser: persistedCaps.maxSessionsPerUser ?? Number.POSITIVE_INFINITY,
+		});
 	}
 
 	/**

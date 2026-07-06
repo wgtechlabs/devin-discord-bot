@@ -40,6 +40,8 @@ export interface BotConfig {
 	botName: string;
 	/** Devin session mode for v3 API keys; ignored for v1 keys */
 	devinMode: DevinMode;
+	/** Optional per-user concurrent session cap; undefined disables the cap */
+	maxSessionsPerUser?: number;
 }
 
 /**

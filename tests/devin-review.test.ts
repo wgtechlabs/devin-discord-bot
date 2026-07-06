@@ -45,6 +45,7 @@ describe("handleReviewButton", () => {
 				})),
 				releaseSession: mock(() => undefined),
 			}),
+			getDevinMode: () => "normal",
 			track: mock(async () => undefined),
 		} as unknown as SessionManager;
 
@@ -69,6 +70,7 @@ describe("handleReviewButton", () => {
 				enqueue,
 				releaseSession: mock(() => undefined),
 			}),
+			getDevinMode: () => "normal",
 			track: mock(async () => undefined),
 		} as unknown as SessionManager;
 

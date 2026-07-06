@@ -14,6 +14,7 @@ import {
 	handleTemplateSelect,
 	handleTemplateSubmit,
 	handleVersion,
+	settingsHandlers,
 } from "../commands/index.js";
 import type { AllowlistStore } from "../services/allowlist-store.js";
 import { getDevinErrorFeedback } from "../services/devin-api.js";
@@ -50,6 +51,11 @@ export function createInteractionHandler(
 					const handler = allowlistHandlers[subcommand];
 					if (handler) {
 						await handler(interaction, config, allowlistStore);
+					}
+				} else if (group === "settings" && subcommand) {
+					const handler = settingsHandlers[subcommand];
+					if (handler) {
+						await handler(interaction, config, sessionManager);
 					}
 				} else {
 					const handler = subcommand ? commandHandlers[subcommand] : undefined;

@@ -77,6 +77,21 @@ function parseDevinMode(value: string): DevinMode | undefined {
 	}
 }
 
+function parsePositiveIntEnv(name: string, value: string | undefined): number | undefined {
+	const raw = value?.trim();
+	if (!raw) return undefined;
+	if (!/^\d+$/.test(raw)) {
+		console.error(`${name} must be a positive integer.`);
+		process.exit(1);
+	}
+	const parsed = Number.parseInt(raw, 10);
+	if (parsed <= 0) {
+		console.error(`${name} must be a positive integer.`);
+		process.exit(1);
+	}
+	return parsed;
+}
+
 /**
  * Loads and validates all required environment variables.
  *
@@ -94,6 +109,10 @@ export function loadConfig(): BotConfig {
 	const rawLogLevel = (process.env.LOG_LEVEL ?? "info").trim();
 	const rawBotName = process.env.BOT_NAME ?? "Devin";
 	const rawDevinMode = (process.env.DEVIN_MODE ?? "normal").trim();
+	const maxSessionsPerUser = parsePositiveIntEnv(
+		"DEVIN_MAX_SESSIONS_PER_USER",
+		process.env.DEVIN_MAX_SESSIONS_PER_USER,
+	);
 
 	if (!discordBotToken) missing.push("DISCORD_BOT_TOKEN");
 	if (!discordClientId) missing.push("DISCORD_CLIENT_ID");
@@ -120,5 +139,6 @@ export function loadConfig(): BotConfig {
 		logLevel,
 		botName,
 		devinMode,
+		maxSessionsPerUser,
 	};
 }

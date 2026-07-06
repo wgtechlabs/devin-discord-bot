@@ -18,6 +18,7 @@ import {
 } from "./devin-allowlist.js";
 import { handleDevinReply } from "./devin-reply.js";
 import { handleDevinSessions } from "./devin-sessions.js";
+import { handleDevinSettingsCap, handleDevinSettingsMode } from "./devin-settings.js";
 import { handleDevinStop } from "./devin-stop.js";
 import { handleDevinTemplate } from "./devin-template.js";
 import { handleDevin } from "./devin.js";
@@ -106,6 +107,47 @@ export const commands = [
 				.addSubcommand((sub) =>
 					sub.setName("list").setDescription("List all users on the DM allowlist"),
 				),
+		)
+		.addSubcommandGroup((group) =>
+			group
+				.setName("settings")
+				.setDescription("Manage runtime bot settings")
+				.addSubcommand((sub) =>
+					sub
+						.setName("mode")
+						.setDescription("Get or set the Devin session mode")
+						.addStringOption((opt) =>
+							opt
+								.setName("value")
+								.setDescription("New mode value (omit to view current)")
+								.setRequired(false)
+								.addChoices(
+									{ name: "normal", value: "normal" },
+									{ name: "fast", value: "fast" },
+									{ name: "lite", value: "lite" },
+									{ name: "ultra", value: "ultra" },
+								),
+						),
+				)
+				.addSubcommand((sub) =>
+					sub
+						.setName("cap")
+						.setDescription("Get or set runtime session caps")
+						.addIntegerOption((opt) =>
+							opt
+								.setName("global")
+								.setDescription("Global max concurrent sessions (0 = unlimited)")
+								.setRequired(false)
+								.setMinValue(0),
+						)
+						.addIntegerOption((opt) =>
+							opt
+								.setName("per_user")
+								.setDescription("Per-user max concurrent sessions (0 = unlimited)")
+								.setRequired(false)
+								.setMinValue(0),
+						),
+				),
 		),
 	new SlashCommandBuilder().setName("version").setDescription("Show the current bot version"),
 ];
@@ -149,6 +191,11 @@ export const allowlistHandlers: Record<string, AllowlistCommandHandler> = {
 	add: handleAllowlistAdd,
 	remove: handleAllowlistRemove,
 	list: handleAllowlistList,
+};
+
+export const settingsHandlers: Record<string, CommandHandler> = {
+	cap: handleDevinSettingsCap,
+	mode: handleDevinSettingsMode,
 };
 
 export {

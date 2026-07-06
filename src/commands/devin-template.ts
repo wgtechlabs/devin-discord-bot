@@ -146,8 +146,9 @@ export async function handleTemplateSubmit(
 
 	if (queue) {
 		try {
+			const devinMode = sessionManager.getDevinMode();
 			const result = await queue.enqueue(interaction.user.id, prompt, (p) =>
-				createSession(config.devinApiKey, p, config.devinOrgId, config.devinMode),
+				createSession(config.devinApiKey, p, config.devinOrgId, devinMode),
 			);
 			session_id = result.sessionId;
 			url = result.url;
@@ -159,12 +160,8 @@ export async function handleTemplateSubmit(
 			throw err;
 		}
 	} else {
-		const result = await createSession(
-			config.devinApiKey,
-			prompt,
-			config.devinOrgId,
-			config.devinMode,
-		);
+		const devinMode = sessionManager.getDevinMode();
+		const result = await createSession(config.devinApiKey, prompt, config.devinOrgId, devinMode);
 		session_id = result.session_id;
 		url = result.url;
 	}

@@ -15,6 +15,7 @@ import { loadConfig } from "./config.js";
 import { createInteractionHandler } from "./handlers/interaction.js";
 import { createMessageHandler } from "./handlers/message.js";
 import { AllowlistStore } from "./services/allowlist-store.js";
+import { BotSettingsStore } from "./services/bot-settings-store.js";
 import { createLogger, setLogLevel } from "./services/logger.js";
 import { DEFAULT_RATE_LIMIT_CONFIG, RateLimiter } from "./services/rate-limiter.js";
 import { SessionManager } from "./services/session-manager.js";
@@ -40,12 +41,20 @@ const client = new Client({
 
 /** Initialize rate limiter and session queue */
 const rateLimiter = new RateLimiter(DEFAULT_RATE_LIMIT_CONFIG);
-const sessionQueue = new SessionQueue({}, rateLimiter);
+const sessionQueue = new SessionQueue(
+	{
+		...(config.maxSessionsPerUser !== undefined
+			? { maxSessionsPerUser: config.maxSessionsPerUser }
+			: {}),
+	},
+	rateLimiter,
+);
 
 /** Initialize session manager, allowlist store, and inject config */
 const stateStore = new SessionStateStore(config.databaseUrl);
+const settingsStore = new BotSettingsStore(config.databaseUrl);
 const allowlistStore = new AllowlistStore(config.databaseUrl);
-const sessionManager = new SessionManager(client, stateStore);
+const sessionManager = new SessionManager(client, stateStore, settingsStore);
 sessionManager.setConfig(config);
 sessionManager.setQueue(sessionQueue);
 
