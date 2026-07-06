@@ -13,6 +13,7 @@ import {
 	handleReviewButton,
 	handleTemplateSelect,
 	handleTemplateSubmit,
+	handleVersion,
 } from "../commands/index.js";
 import type { AllowlistStore } from "../services/allowlist-store.js";
 import { getDevinErrorFeedback } from "../services/devin-api.js";
@@ -38,7 +39,9 @@ export function createInteractionHandler(
 	return async (interaction: Interaction): Promise<void> => {
 		let devinErrorContext: Parameters<typeof getDevinErrorFeedback>[1] = "session_start";
 		try {
-			if (interaction.isChatInputCommand() && interaction.commandName === "devin") {
+			if (interaction.isChatInputCommand() && interaction.commandName === "version") {
+				await handleVersion(interaction);
+			} else if (interaction.isChatInputCommand() && interaction.commandName === "devin") {
 				const group = interaction.options.getSubcommandGroup(false);
 				const subcommand = interaction.options.getSubcommand(false);
 				devinErrorContext = subcommand === "reply" ? "message_forward" : "session_start";
