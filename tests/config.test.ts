@@ -206,6 +206,39 @@ describe("loadConfig", () => {
 		}
 	});
 
+	test("leaves per-user session cap disabled when env var is not set", () => {
+		const original = process.env.DEVIN_MAX_SESSIONS_PER_USER;
+		try {
+			// biome-ignore lint/performance/noDelete: Test requires unsetting env var.
+			delete process.env.DEVIN_MAX_SESSIONS_PER_USER;
+			const config = loadConfig();
+			expect(config.maxSessionsPerUser).toBeUndefined();
+		} finally {
+			if (original === undefined) {
+				// biome-ignore lint/performance/noDelete: Restore env var to unset state.
+				delete process.env.DEVIN_MAX_SESSIONS_PER_USER;
+			} else {
+				process.env.DEVIN_MAX_SESSIONS_PER_USER = original;
+			}
+		}
+	});
+
+	test("uses DEVIN_MAX_SESSIONS_PER_USER when provided", () => {
+		const original = process.env.DEVIN_MAX_SESSIONS_PER_USER;
+		try {
+			process.env.DEVIN_MAX_SESSIONS_PER_USER = "3";
+			const config = loadConfig();
+			expect(config.maxSessionsPerUser).toBe(3);
+		} finally {
+			if (original === undefined) {
+				// biome-ignore lint/performance/noDelete: Restore env var to unset state.
+				delete process.env.DEVIN_MAX_SESSIONS_PER_USER;
+			} else {
+				process.env.DEVIN_MAX_SESSIONS_PER_USER = original;
+			}
+		}
+	});
+
 	test("requires DEVIN_ORG_ID for cog_ keys", () => {
 		const originalApiKey = process.env.DEVIN_API_KEY;
 		const originalOrgId = process.env.DEVIN_ORG_ID;

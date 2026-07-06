@@ -85,6 +85,10 @@ DEVIN_API_KEY=apk_your_api_key
 # Optional — session compute tier for v3 keys (normal, fast, lite, ultra)
 # DEVIN_MODE=normal
 
+# Optional — per-user concurrent session cap in Discord (disabled by default)
+# Set a positive integer to enable (example: 2)
+# DEVIN_MAX_SESSIONS_PER_USER=2
+
 # Optional — customize the bot's display name in embeds and thread names
 # BOT_NAME=Devin
 ```
