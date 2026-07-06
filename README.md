@@ -83,6 +83,8 @@ DEVIN_API_KEY=apk_your_api_key
 # DEVIN_ORG_ID=org_your_org_id
 
 # Optional — session compute tier for v3 keys (normal, fast, lite, ultra)
+# Startup default only; can be changed at runtime with:
+# /devin settings mode value:<normal|fast|lite|ultra>
 # DEVIN_MODE=normal
 
 # Optional — per-user concurrent session cap in Discord (disabled by default)

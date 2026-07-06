@@ -18,6 +18,7 @@ import {
 } from "./devin-allowlist.js";
 import { handleDevinReply } from "./devin-reply.js";
 import { handleDevinSessions } from "./devin-sessions.js";
+import { handleDevinSettingsMode } from "./devin-settings.js";
 import { handleDevinStop } from "./devin-stop.js";
 import { handleDevinTemplate } from "./devin-template.js";
 import { handleDevin } from "./devin.js";
@@ -106,6 +107,28 @@ export const commands = [
 				.addSubcommand((sub) =>
 					sub.setName("list").setDescription("List all users on the DM allowlist"),
 				),
+		)
+		.addSubcommandGroup((group) =>
+			group
+				.setName("settings")
+				.setDescription("Manage runtime bot settings")
+				.addSubcommand((sub) =>
+					sub
+						.setName("mode")
+						.setDescription("Get or set the Devin session mode")
+						.addStringOption((opt) =>
+							opt
+								.setName("value")
+								.setDescription("New mode value (omit to view current)")
+								.setRequired(false)
+								.addChoices(
+									{ name: "normal", value: "normal" },
+									{ name: "fast", value: "fast" },
+									{ name: "lite", value: "lite" },
+									{ name: "ultra", value: "ultra" },
+								),
+						),
+				),
 		),
 	new SlashCommandBuilder().setName("version").setDescription("Show the current bot version"),
 ];
@@ -149,6 +172,10 @@ export const allowlistHandlers: Record<string, AllowlistCommandHandler> = {
 	add: handleAllowlistAdd,
 	remove: handleAllowlistRemove,
 	list: handleAllowlistList,
+};
+
+export const settingsHandlers: Record<string, CommandHandler> = {
+	mode: handleDevinSettingsMode,
 };
 
 export {
