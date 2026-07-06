@@ -18,7 +18,7 @@ import {
 } from "./devin-allowlist.js";
 import { handleDevinReply } from "./devin-reply.js";
 import { handleDevinSessions } from "./devin-sessions.js";
-import { handleDevinSettingsMode } from "./devin-settings.js";
+import { handleDevinSettingsCap, handleDevinSettingsMode } from "./devin-settings.js";
 import { handleDevinStop } from "./devin-stop.js";
 import { handleDevinTemplate } from "./devin-template.js";
 import { handleDevin } from "./devin.js";
@@ -128,6 +128,25 @@ export const commands = [
 									{ name: "ultra", value: "ultra" },
 								),
 						),
+				)
+				.addSubcommand((sub) =>
+					sub
+						.setName("cap")
+						.setDescription("Get or set runtime session caps")
+						.addIntegerOption((opt) =>
+							opt
+								.setName("global")
+								.setDescription("Global max concurrent sessions (0 = unlimited)")
+								.setRequired(false)
+								.setMinValue(0),
+						)
+						.addIntegerOption((opt) =>
+							opt
+								.setName("per_user")
+								.setDescription("Per-user max concurrent sessions (0 = unlimited)")
+								.setRequired(false)
+								.setMinValue(0),
+						),
 				),
 		),
 	new SlashCommandBuilder().setName("version").setDescription("Show the current bot version"),
@@ -175,6 +194,7 @@ export const allowlistHandlers: Record<string, AllowlistCommandHandler> = {
 };
 
 export const settingsHandlers: Record<string, CommandHandler> = {
+	cap: handleDevinSettingsCap,
 	mode: handleDevinSettingsMode,
 };
 

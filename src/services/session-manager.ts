@@ -150,6 +150,34 @@ export class SessionManager {
 		await this.settingsStore?.setDevinMode(mode);
 	}
 
+	getSessionCaps(): {
+		maxConcurrentSessions: number | undefined;
+		maxSessionsPerUser: number | undefined;
+	} {
+		const limits = this.queue?.getLimits();
+		return {
+			maxConcurrentSessions:
+				limits?.maxConcurrentSessions === Number.POSITIVE_INFINITY
+					? undefined
+					: limits?.maxConcurrentSessions,
+			maxSessionsPerUser:
+				limits?.maxSessionsPerUser === Number.POSITIVE_INFINITY
+					? undefined
+					: (limits?.maxSessionsPerUser ?? this.config?.maxSessionsPerUser),
+		};
+	}
+
+	async setSessionCaps(caps: {
+		maxConcurrentSessions: number | undefined;
+		maxSessionsPerUser: number | undefined;
+	}): Promise<void> {
+		this.queue?.setLimits({
+			maxConcurrentSessions: caps.maxConcurrentSessions ?? Number.POSITIVE_INFINITY,
+			maxSessionsPerUser: caps.maxSessionsPerUser ?? Number.POSITIVE_INFINITY,
+		});
+		await this.settingsStore?.setSessionCaps(caps);
+	}
+
 	/**
 	 * Injects the session queue for concurrency control.
 	 *
@@ -228,7 +256,12 @@ export class SessionManager {
 		}
 
 		const persistedMode = await this.settingsStore.getDevinMode();
+		const persistedCaps = await this.settingsStore.getSessionCaps();
 		this.runtimeDevinMode = persistedMode ?? defaultMode;
+		this.queue?.setLimits({
+			maxConcurrentSessions: persistedCaps.maxConcurrentSessions ?? Number.POSITIVE_INFINITY,
+			maxSessionsPerUser: persistedCaps.maxSessionsPerUser ?? Number.POSITIVE_INFINITY,
+		});
 	}
 
 	/**

@@ -40,7 +40,7 @@ export interface SessionQueueConfig {
 }
 
 export const DEFAULT_QUEUE_CONFIG: SessionQueueConfig = {
-	maxConcurrentSessions: 5,
+	maxConcurrentSessions: Number.POSITIVE_INFINITY,
 	maxSessionsPerUser: Number.POSITIVE_INFINITY,
 	maxQueueSize: 20,
 	queueTimeout: 300_000,
@@ -199,6 +199,19 @@ export class SessionQueue {
 	 */
 	getUserActiveSessions(userId: string): number {
 		return this.activeSessionsByUser.get(userId)?.size ?? 0;
+	}
+
+	getLimits(): { maxConcurrentSessions: number; maxSessionsPerUser: number } {
+		return {
+			maxConcurrentSessions: this.config.maxConcurrentSessions,
+			maxSessionsPerUser: this.config.maxSessionsPerUser,
+		};
+	}
+
+	setLimits(limits: { maxConcurrentSessions: number; maxSessionsPerUser: number }): void {
+		this.config.maxConcurrentSessions = limits.maxConcurrentSessions;
+		this.config.maxSessionsPerUser = limits.maxSessionsPerUser;
+		void this.processNext();
 	}
 
 	/**

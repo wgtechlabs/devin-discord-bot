@@ -39,3 +39,53 @@ export async function handleDevinSettingsMode(
 	await sessionManager.setDevinMode(mode);
 	await interaction.editReply(`Set Devin mode to **${mode}**. New sessions will use this setting.`);
 }
+
+function formatCapValue(value: number | undefined): string {
+	return value === undefined ? "unlimited" : String(value);
+}
+
+export async function handleDevinSettingsCap(
+	interaction: ChatInputCommandInteraction,
+	_config: BotConfig,
+	sessionManager: SessionManager,
+): Promise<void> {
+	if (!hasPermission(interaction)) {
+		await interaction.reply({
+			content: "You need **Manage Server** permission to manage bot settings.",
+			ephemeral: true,
+		});
+		return;
+	}
+
+	const globalCapOption = interaction.options.getInteger("global", false);
+	const perUserCapOption = interaction.options.getInteger("per_user", false);
+	await interaction.deferReply({ ephemeral: true });
+
+	const current = sessionManager.getSessionCaps();
+	if (globalCapOption === null && perUserCapOption === null) {
+		await interaction.editReply(
+			`Current caps — global: **${formatCapValue(current.maxConcurrentSessions)}**, per-user: **${formatCapValue(current.maxSessionsPerUser)}**.`,
+		);
+		return;
+	}
+
+	const nextCaps = {
+		maxConcurrentSessions:
+			globalCapOption === null
+				? current.maxConcurrentSessions
+				: globalCapOption === 0
+					? undefined
+					: globalCapOption,
+		maxSessionsPerUser:
+			perUserCapOption === null
+				? current.maxSessionsPerUser
+				: perUserCapOption === 0
+					? undefined
+					: perUserCapOption,
+	};
+
+	await sessionManager.setSessionCaps(nextCaps);
+	await interaction.editReply(
+		`Updated caps — global: **${formatCapValue(nextCaps.maxConcurrentSessions)}**, per-user: **${formatCapValue(nextCaps.maxSessionsPerUser)}**.`,
+	);
+}

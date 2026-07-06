@@ -89,7 +89,9 @@ DEVIN_API_KEY=apk_your_api_key
 
 # Optional — per-user concurrent session cap in Discord (disabled by default)
 # Set a positive integer to enable (example: 2)
+# Runtime override available via: /devin settings cap per_user:<n|0>
 # DEVIN_MAX_SESSIONS_PER_USER=2
+# Runtime-only global cap via slash command: /devin settings cap global:<n|0>
 
 # Optional — customize the bot's display name in embeds and thread names
 # BOT_NAME=Devin
