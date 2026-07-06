@@ -8,6 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [0.5.1] - 2026-07-06
+
+### Changed
+
+- add runtime settings slash commands
+- add runtime session cap slash config
+- add slash-configurable devin mode
+- bump version and update scripts
+- remove prepare check from install path
+- harden thread reply session checks (#51)
+- make per-user session cap opt-in (#50)
+
 ## [0.5.0] - 2026-07-06
 
 ### Added
