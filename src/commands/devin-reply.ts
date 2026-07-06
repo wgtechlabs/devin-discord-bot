@@ -48,17 +48,17 @@ export async function handleDevinReply(
 		return;
 	}
 
-	if (TERMINAL_STATUSES.has(tracked.lastStatus)) {
+	if (explicitId && tracked.userId !== interaction.user.id) {
 		await interaction.reply({
-			content: "This session is closed. Start a new session to continue.",
+			content: "You can only send messages to sessions that you started.",
 			ephemeral: true,
 		});
 		return;
 	}
 
-	if (explicitId && tracked.userId !== interaction.user.id) {
+	if (TERMINAL_STATUSES.has(tracked.lastStatus)) {
 		await interaction.reply({
-			content: "You can only send messages to sessions that you started.",
+			content: "This session is closed. Start a new session to continue.",
 			ephemeral: true,
 		});
 		return;
@@ -82,7 +82,7 @@ export async function handleDevinReply(
 			);
 			message += `\nATTACHMENT:"${fileUrl}"`;
 		} catch (err) {
-			log.error("Attachment upload failed:", err);
+			log.error("Attachment processing failed:", err);
 			await interaction.editReply("Failed to upload attachment. Message was not sent.");
 			return;
 		}

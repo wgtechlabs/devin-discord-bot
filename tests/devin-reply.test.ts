@@ -67,7 +67,7 @@ describe("handleDevinReply", () => {
 		});
 		const sessionManager = {
 			getSessionByThread: () => undefined,
-			getTracked: () => ({ lastStatus: "running", userId: "user-2" }),
+			getTracked: () => ({ lastStatus: "finished", userId: "user-2" }),
 		} as unknown as SessionManager;
 
 		await handleDevinReply(interaction, config, sessionManager);
@@ -80,10 +80,22 @@ describe("handleDevinReply", () => {
 	});
 
 	test("fails fast when attachment upload fails", async () => {
-		(globalThis as { fetch: typeof fetch }).fetch = mock(async () => ({
-			ok: false,
-			status: 500,
-		})) as typeof fetch;
+		const fetchMock = mock(async (_input: RequestInfo | URL, init?: RequestInit) => {
+			if (init?.method === "POST") {
+				return {
+					ok: false,
+					status: 500,
+					text: async () => "upload failed",
+				};
+			}
+
+			return {
+				ok: true,
+				status: 200,
+				arrayBuffer: async () => new ArrayBuffer(8),
+			};
+		});
+		(globalThis as { fetch: typeof fetch }).fetch = fetchMock as typeof fetch;
 
 		const interaction = createInteraction({
 			message: "hello",
@@ -100,5 +112,6 @@ describe("handleDevinReply", () => {
 		expect(interaction.editReply).toHaveBeenCalledWith(
 			"Failed to upload attachment. Message was not sent.",
 		);
+		expect(fetchMock).toHaveBeenCalledTimes(2);
 	});
 });
