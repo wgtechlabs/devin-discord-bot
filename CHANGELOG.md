@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [0.5.2] - 2026-07-07
+
+### Changed
+
+- update README to reflect correct project name and details
+- format package.json to satisfy lint checks (#55)
+- enable floating tags with build-flow-action v0.1.9 (#53)
+
 ## [0.5.1] - 2026-07-06
 
 ### Changed
