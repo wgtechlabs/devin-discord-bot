@@ -22,7 +22,7 @@ permissions:
 
 jobs:
   build-flow:
-    uses: wgtechlabs/build-flow-action/.github/workflows/app.yml@v0.1.8
+    uses: wgtechlabs/build-flow-action/.github/workflows/app.yml@v0.1.9
     secrets: inherit
     with:
       ci-profile: auto
@@ -32,6 +32,7 @@ jobs:
       enable-package: false
       enable-container: true
       container-registry: both
+      container-floating-tags: true
 
   publish-latest-tags:
     name: Publish latest container tags

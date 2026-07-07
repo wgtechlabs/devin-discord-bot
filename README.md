@@ -1,15 +1,12 @@
 
-# Devin Discord Bot
+# Devin AI — Discord Bot
 
-![GitHub Repo Banner](https://ghrb.waren.build/banner?header=Devin+%E2%80%94+Discord+Bot+%21%5Bdiscord%5D&subheader=Bring+your+AI+software+engineer+to+your+Discord&bg=013B84-016EEA&color=FFFFFF&headerfont=Inter&subheaderfont=Kinewave&watermarkpos=bottom-right)
+![GitHub Repo Banner](https://ghrb.waren.build/banner?header=Devin+AI+%E2%80%94+Discord+Bot+%21%5Bdiscord%5D&subheader=Bring+your+AI+software+engineer+to+your+Discord&bg=013B84-016EEA&color=FFFFFF&headerfont=Inter&subheaderfont=Kinewave&watermarkpos=bottom-right)
 <!-- Created with GitHub Repo Banner by Waren Gonzaga: https://ghrb.waren.build -->
 
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue.svg)](https://www.typescriptlang.org/)
-[![discord.js](https://img.shields.io/badge/discord.js-v14-5865F2.svg)](https://discord.js.org/)
-[![Node.js](https://img.shields.io/badge/Node.js-Runtime-green.svg)](https://nodejs.org/)
+[![License](https://img.shields.io/badge/License-GPLv3-06B6D4.svg?style=flat-square)](https://www.gnu.org/licenses/gpl-3.0) [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue.svg?style=flat-square)](https://www.typescriptlang.org/) [![DiscordJS](https://img.shields.io/badge/DiscordJS-v14-5865F2.svg?style=flat-square)](https://discord.js.org/) [![NodeJS](https://img.shields.io/badge/NodeJS-v26-5FA04E.svg?style=flat-square)](https://nodejs.org/) [![BunJS](https://img.shields.io/badge/BunJS-v1.3.13-F9F1E1.svg?style=flat-square)](https://bun.sh/) [![Docker Hub](https://img.shields.io/badge/Docker%20Hub-2496ED?logo=docker&logoColor=white&style=flat-square)](https://hub.docker.com/r/wgtechlabs/devin-discord-bot) [![GitHub Packages](https://img.shields.io/badge/GitHub%20Packages-181717?logo=github&logoColor=white&style=flat-square)](https://github.com/wgtechlabs/devin-discord-bot/pkgs/container/devin-discord-bot)
 
-Devin Discord Bot is a self-hosted TypeScript integration that brings Devin AI into Discord. Start sessions with a mention or slash command, collaborate in dedicated threads with live status updates, and run tasks like PRs, tests, and bug fixes without leaving Discord.
+Devin AI — Discord Bot is a self-hosted TypeScript integration that brings Devin AI into Discord. Start sessions with a mention or slash command, collaborate in dedicated threads with live status updates, and run tasks like PRs, tests, and bug fixes without leaving Discord.
 
 ## Deploy Your Own
 
