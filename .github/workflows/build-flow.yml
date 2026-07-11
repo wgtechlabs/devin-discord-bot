@@ -38,7 +38,7 @@ jobs:
     name: Publish latest container tags
     needs: [build-flow]
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     permissions:
       contents: read
       packages: write
